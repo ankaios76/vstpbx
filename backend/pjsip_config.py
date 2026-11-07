@@ -175,6 +175,10 @@ def generate_trunk_config(trunk: SIPTrunk, skip_identify: bool = False) -> str:
         from_domain = "tel.t-online.de"
         client_domain = "tel.t-online.de"
         auth_realm_line = "\nrealm=tel.t-online.de"
+    if trunk.provider == "fritzbox":
+        # AVM FRITZ!Box: Realm muss "fritz.box" sein, auch wenn per IP geroutet wird.
+        from_domain = "fritz.box"
+        client_domain = "fritz.box"
 
     if trunk.auth_mode == "registration":
         config += f"""

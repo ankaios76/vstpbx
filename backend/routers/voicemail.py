@@ -1,7 +1,7 @@
 """
 Voicemail API Router with database integration
 """
-from fastapi import APIRouter, HTTPException, Depends, Query
+from fastapi import APIRouter, HTTPException, Depends, Query, UploadFile, File
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, func
@@ -236,3 +236,88 @@ async def delete_voicemail(voicemail_id: int, current_user: User = Depends(get_c
     db.delete(vm)
     db.commit()
     return {"success": True, "message": "Voicemail deleted"}
+
+
+# ==================== Mailbox-Ansagen (Greetings) ====================
+import subprocess as _subprocess
+import tempfile as _tempfile
+
+GREETING_KINDS = {
+    "unavail": "Nicht erreichbar",
+    "busy": "Besetzt",
+    "temp": "Temporaere Ansage",
+    "greet": "Name",
+}
+
+
+def _mailbox_dir(extension: str) -> str:
+    if not extension.isdigit():
+        raise HTTPException(status_code=400, detail="Ungueltige Nebenstelle")
+    return os.path.join(VOICEMAIL_PATH, extension)
+
+
+@router.get("/mailboxes")
+async def list_all_mailboxes(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Alle konfigurierten Mailboxen (fuer die Ansagen-Verwaltung)."""
+    rows = db.query(VoicemailMailbox).all()
+    return [{"extension": m.extension, "name": getattr(m, "name", None)} for m in rows]
+
+
+@router.get("/mailbox/{extension}/greetings")
+async def list_greetings(extension: str, current_user: User = Depends(get_current_user)):
+    d = _mailbox_dir(extension)
+    out = {}
+    for kind, label in GREETING_KINDS.items():
+        fp = os.path.join(d, f"{kind}.wav")
+        exists = os.path.exists(fp)
+        out[kind] = {"label": label, "exists": exists, "size": os.path.getsize(fp) if exists else 0}
+    return out
+
+
+@router.post("/mailbox/{extension}/greeting/{kind}")
+async def upload_greeting(extension: str, kind: str, file: UploadFile = File(...),
+                          current_user: User = Depends(get_current_user)):
+    if kind not in GREETING_KINDS:
+        raise HTTPException(status_code=400, detail="Unbekannte Ansage-Art")
+    d = _mailbox_dir(extension)
+    os.makedirs(d, exist_ok=True)
+    raw = await file.read()
+    if not raw:
+        raise HTTPException(status_code=400, detail="Leere Datei")
+    if len(raw) > 10 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="Datei zu gross (max. 10 MB)")
+    suffix = os.path.splitext(file.filename or "")[1][:8] or ".bin"
+    tin = _tempfile.NamedTemporaryFile(suffix=suffix, delete=False)
+    try:
+        tin.write(raw)
+        tin.close()
+        outpath = os.path.join(d, f"{kind}.wav")
+        proc = _subprocess.run(
+            ["ffmpeg", "-y", "-i", tin.name, "-ar", "8000", "-ac", "1", "-acodec", "pcm_s16le", outpath],
+            capture_output=True, timeout=30,
+        )
+        if proc.returncode != 0:
+            logger.warning("ffmpeg greeting convert failed: %s", proc.stderr.decode(errors="ignore")[-400:])
+            raise HTTPException(status_code=400,
+                                detail="Audio konnte nicht konvertiert werden. Bitte eine gaengige Audiodatei (WAV/MP3) hochladen.")
+        try:
+            os.chmod(outpath, 0o644)
+        except OSError:
+            pass
+    finally:
+        try:
+            os.unlink(tin.name)
+        except OSError:
+            pass
+    logger.info("Greeting %s fuer Mailbox %s gesetzt", kind, extension)
+    return {"success": True, "extension": extension, "kind": kind}
+
+
+@router.delete("/mailbox/{extension}/greeting/{kind}")
+async def delete_greeting(extension: str, kind: str, current_user: User = Depends(get_current_user)):
+    if kind not in GREETING_KINDS:
+        raise HTTPException(status_code=400, detail="Unbekannte Ansage-Art")
+    fp = os.path.join(_mailbox_dir(extension), f"{kind}.wav")
+    if os.path.exists(fp):
+        os.remove(fp)
+    return {"success": True}

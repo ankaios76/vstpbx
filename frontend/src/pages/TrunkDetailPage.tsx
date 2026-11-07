@@ -20,6 +20,7 @@ export default function TrunkDetailPage({ trunkId, onBack }: Props) {
     telekom_companyflex: { label: tr('Telekom CompanyFlex SIP-Trunk', 'Telekom CompanyFlex SIP Trunk'), logo: '/logos/telekom.jpg' },
     telekom_allip: { label: tr('Telekom All-IP (Privat)', 'Telekom All-IP (Residential)'), logo: '/logos/telekom.jpg' },
     iliad_it: { label: tr('Iliad (Italien)', 'Iliad (Italy)') },
+    fritzbox: { label: 'AVM FRITZ!Box' },
   }
 
   const fetchStatus = async () => {

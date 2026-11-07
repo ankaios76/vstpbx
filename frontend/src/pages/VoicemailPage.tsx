@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import VoicemailPlayer from '../components/VoicemailPlayer';
+import MailboxGreetings from '../components/MailboxGreetings';
 import './VoicemailPage.css';
 import { useI18n } from '../context/I18nContext';
 
@@ -28,11 +29,18 @@ const VoicemailPage = () => {
   const [selectedMailbox, setSelectedMailbox] = useState<string>('all');
   const [selectedVoicemail, setSelectedVoicemail] = useState<Voicemail | null>(null);
   const [showUnreadOnly, setShowUnreadOnly] = useState(false);
+  const [allMailboxes, setAllMailboxes] = useState<string[]>([]);
 
   useEffect(() => {
     fetchVoicemails();
     fetchStats();
   }, [selectedMailbox, showUnreadOnly]);
+
+  useEffect(() => {
+    axios.get('/api/voicemail/mailboxes')
+      .then(r => setAllMailboxes((r.data || []).map((m: any) => String(m.extension))))
+      .catch(() => {});
+  }, []);
 
   const fetchVoicemails = async () => {
     try {
@@ -124,7 +132,7 @@ const VoicemailPage = () => {
     }
   };
 
-  const mailboxes = stats ? ['all', ...Object.keys(stats.by_mailbox)] : ['all'];
+  const mailboxes = ['all', ...Array.from(new Set([...allMailboxes, ...(stats ? Object.keys(stats.by_mailbox) : [])])).sort()];
 
   return (
     <div className="voicemail-page">
@@ -181,6 +189,9 @@ const VoicemailPage = () => {
         </div>
 
         <div className="voicemail-content">
+          {selectedMailbox !== 'all' && (
+            <MailboxGreetings extension={selectedMailbox} />
+          )}
           {loading ? (
             <div className="loading-state">
               <div className="spinner"></div>

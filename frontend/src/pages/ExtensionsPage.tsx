@@ -81,6 +81,15 @@ export default function ExtensionsPage({ mode }: ExtensionsPageProps) {
         'Telekom residential (MagentaZuhause). Use email as username and the phone number as From-User in E.164 format (+49...).'
       ),
     },
+    fritzbox: {
+      label: 'AVM FRITZ!Box',
+      supportsIp: false,
+      requiresServerInput: true,
+      hint: tr(
+        'Server = IP deiner FRITZ!Box (z.B. 192.168.178.1). Benutzername/Kennwort aus Telefonie → Telefoniegeräte → Telefon (LAN/IP) – nicht die Rufnummer. Das Realm wird automatisch auf fritz.box gesetzt.',
+        'Server = your FRITZ!Box IP (e.g. 192.168.178.1). Username/password from Telephony → Telephony devices → Telephone (LAN/IP) – not the phone number. The realm is set to fritz.box automatically.'
+      ),
+    },
     custom: { label: tr('Anderer Provider', 'Other provider'), supportsIp: true },
   }
 
