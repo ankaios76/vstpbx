@@ -3,11 +3,13 @@ services:
     build: ./asterisk
     container_name: pbx_asterisk
     restart: unless-stopped
-    ports:
-      - "${SIP_PORT:-5060}:5060/udp"
-      - "${SIP_PORT:-5060}:5060/tcp"
-      - "127.0.0.1:5038:5038/tcp"
-      - "10000-10100:10000-10100/udp"
+    # Host-Networking: Asterisk bindet direkt die LAN-IP des Hosts, damit LAN-Gegenstellen
+    # (FRITZ!Box, Tischtelefone) eine erreichbare Contact-/SDP-Adresse sehen. Im Bridge-Modus
+    # traegt Asterisk die Container-interne 172.x-IP ein -> LAN-Geraete koennen keine
+    # Folgepakete/Medien zustellen und die Registrierung bricht nach kurzer Zeit ab.
+    # SIP: Host-Port 5060 (UDP/TCP), RTP: 10000-10100/udp, AMI: 5038 (nur intern erreichbar,
+    # siehe manager.conf-ACL). Das SIP_PORT-Remapping entfaellt im Host-Modus.
+    network_mode: host
     volumes:
       - ./asterisk/config:/etc/asterisk/custom
       - ./asterisk/logs:/var/log/asterisk
@@ -17,8 +19,6 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-    networks:
-      - pbx_network
     command: >
       sh -c "
         cp /etc/asterisk/custom/*.conf /etc/asterisk/ 2>/dev/null || true;
@@ -34,7 +34,8 @@ services:
     env_file: .env
     environment:
       - DATABASE_URL=postgresql://asterisk:${DB_PASSWORD}@postgres:5432/asterisk_gui
-      - ASTERISK_HOST=asterisk
+      # Asterisk laeuft im Host-Netz -> AMI ueber das Host-Gateway erreichen (siehe extra_hosts).
+      - ASTERISK_HOST=${ASTERISK_HOST:-host.docker.internal}
       - ASTERISK_PORT=5038
       - ASTERISK_USER=admin
       - ASTERISK_PASSWORD=${AMI_PASSWORD}
@@ -57,6 +58,9 @@ services:
         condition: service_healthy
       asterisk:
         condition: service_healthy
+    extra_hosts:
+      # Zugriff aufs Host-Netz: Asterisk-AMI (5038) laeuft dort (network_mode: host).
+      - "host.docker.internal:host-gateway"
     networks:
       - pbx_network
 

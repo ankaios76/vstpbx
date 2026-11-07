@@ -5,8 +5,12 @@ bindaddr = 0.0.0.0
 
 [admin]
 secret = %%AMI_PASSWORD%%
+# AMI bindet im Host-Netz auf 0.0.0.0 -> ACL auf Loopback + Docker-Subnetze beschraenken,
+# damit die Schnittstelle NICHT aus dem LAN nutzbar ist. Das Backend verbindet sich aus
+# dem Bridge-Netz (172.16.0.0/12) ueber host.docker.internal.
 deny = 0.0.0.0/0.0.0.0
-permit = 0.0.0.0/0.0.0.0
+permit = 127.0.0.1/32
+permit = 172.16.0.0/12
 read = system,call,log,verbose,agent,user,config,dtmf,reporting,cdr,dialplan
 write = system,call,agent,user,config,command,reporting,originate
 writetimeout = 5000
