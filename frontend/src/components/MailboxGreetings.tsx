@@ -12,17 +12,17 @@ interface GreetingInfo {
 type Greetings = Record<string, GreetingInfo>;
 
 export default function MailboxGreetings({ extension }: { extension: string }) {
-  const { tr } = useI18n();
+  const { t } = useI18n();
   const [greetings, setGreetings] = useState<Greetings>({});
   const [busy, setBusy] = useState<string | null>(null);
   const [msg, setMsg] = useState<{ kind: string; text: string; ok: boolean } | null>(null);
   const fileRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   const KIND_ORDER: { kind: string; title: string; desc: string }[] = [
-    { kind: 'unavail', title: tr('Nicht erreichbar', 'Unavailable'), desc: tr('Wird abgespielt, wenn die Nebenstelle nicht abnimmt.', 'Played when the extension does not answer.') },
-    { kind: 'busy', title: tr('Besetzt', 'Busy'), desc: tr('Wird abgespielt, wenn besetzt ist.', 'Played when the line is busy.') },
-    { kind: 'temp', title: tr('Temporäre Ansage', 'Temporary greeting'), desc: tr('Überschreibt vorübergehend die obigen Ansagen (z. B. Urlaub).', 'Temporarily overrides the greetings above (e.g. vacation).') },
-    { kind: 'greet', title: tr('Name', 'Name'), desc: tr('Name für die Standard-Ansage ("Sie haben … erreicht").', 'Name for the default greeting ("You have reached …").') },
+    { kind: 'unavail', title: t('mailboxGreetings.unavailable'), desc: t('mailboxGreetings.unavailableDescription') },
+    { kind: 'busy', title: t('mailboxGreetings.busy'), desc: t('mailboxGreetings.busyDescription') },
+    { kind: 'temp', title: t('mailboxGreetings.temporary'), desc: t('mailboxGreetings.temporaryDescription') },
+    { kind: 'greet', title: t('mailboxGreetings.name'), desc: t('mailboxGreetings.nameDescription') },
   ];
 
   const load = async () => {
@@ -49,10 +49,10 @@ export default function MailboxGreetings({ extension }: { extension: string }) {
       await axios.post(`/api/voicemail/mailbox/${extension}/greeting/${kind}`, fd, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-      setMsg({ kind, text: tr('Ansage gespeichert.', 'Greeting saved.'), ok: true });
+      setMsg({ kind, text: t('mailboxGreetings.saved'), ok: true });
       await load();
     } catch (e: any) {
-      setMsg({ kind, text: e?.response?.data?.detail || tr('Upload fehlgeschlagen.', 'Upload failed.'), ok: false });
+      setMsg({ kind, text: e?.response?.data?.detail || t('mailboxGreetings.uploadFailed'), ok: false });
     } finally {
       setBusy(null);
       if (fileRefs.current[kind]) fileRefs.current[kind]!.value = '';
@@ -64,10 +64,10 @@ export default function MailboxGreetings({ extension }: { extension: string }) {
     setMsg(null);
     try {
       await axios.delete(`/api/voicemail/mailbox/${extension}/greeting/${kind}`);
-      setMsg({ kind, text: tr('Ansage gelöscht.', 'Greeting deleted.'), ok: true });
+      setMsg({ kind, text: t('mailboxGreetings.deleted'), ok: true });
       await load();
     } catch (e: any) {
-      setMsg({ kind, text: e?.response?.data?.detail || tr('Löschen fehlgeschlagen.', 'Delete failed.'), ok: false });
+      setMsg({ kind, text: e?.response?.data?.detail || t('mailboxGreetings.deleteFailed'), ok: false });
     } finally {
       setBusy(null);
     }
@@ -80,12 +80,11 @@ export default function MailboxGreetings({ extension }: { extension: string }) {
 
   return (
     <div style={{ marginBottom: 20 }}>
-      <h3 style={{ margin: '0 0 4px' }}>{tr('Ansagen für Mailbox', 'Greetings for mailbox')} {extension}</h3>
+      <h3 style={{ margin: '0 0 4px' }}>{t('mailboxGreetings.title', { extension })}</h3>
       <p style={{ margin: '0 0 14px', fontSize: 13, opacity: 0.7 }}>
-        {tr('Eigene Ansage als Audiodatei hochladen (WAV oder MP3; wird automatisch ins passende Format gewandelt).',
-            'Upload your own greeting as an audio file (WAV or MP3; converted to the right format automatically).')}
+        {t('mailboxGreetings.uploadDescription')}
         {' '}
-        {tr('Alternativ per Telefon:', 'Alternatively by phone:')} <code>*98</code> → <code>0</code>.
+        {t('mailboxGreetings.alternativelyByPhone')} <code>*98</code> → <code>0</code>.
       </p>
 
       {KIND_ORDER.map(({ kind, title, desc }) => {
@@ -98,7 +97,7 @@ export default function MailboxGreetings({ extension }: { extension: string }) {
               <div>
                 <strong>{title}</strong>
                 <span style={{ marginLeft: 8, fontSize: 12, color: exists ? '#2e7d32' : '#9e9e9e' }}>
-                  {exists ? tr('● hinterlegt', '● set') : tr('○ keine eigene Ansage', '○ no custom greeting')}
+                  {exists ? t('mailboxGreetings.set') : t('mailboxGreetings.notSet')}
                 </span>
                 <div style={{ fontSize: 12, opacity: 0.65, marginTop: 2 }}>{desc}</div>
               </div>
@@ -117,12 +116,12 @@ export default function MailboxGreetings({ extension }: { extension: string }) {
                     disabled={isBusy}
                     style={{ fontSize: 13, padding: '5px 10px', borderRadius: 6, border: '1px solid #d33', color: '#d33', background: 'transparent', cursor: 'pointer' }}
                   >
-                    {tr('Löschen', 'Delete')}
+                    {t('mailboxGreetings.delete')}
                   </button>
                 )}
               </div>
             </div>
-            {isBusy && <div style={{ fontSize: 12, marginTop: 8 }}>{tr('… wird verarbeitet', '… processing')}</div>}
+            {isBusy && <div style={{ fontSize: 12, marginTop: 8 }}>{t('mailboxGreetings.processing')}</div>}
             {msg && msg.kind === kind && (
               <div style={{ fontSize: 12, marginTop: 8, color: msg.ok ? '#2e7d32' : '#d33' }}>{msg.text}</div>
             )}

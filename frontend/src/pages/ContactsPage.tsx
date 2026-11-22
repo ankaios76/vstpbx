@@ -33,7 +33,7 @@ const emptyForm = {
 
 export default function ContactsPage() {
   const { user } = useAuth()
-  const { tr } = useI18n()
+  const { t } = useI18n()
   const isAdmin = user?.role === 'admin'
 
   const [scope, setScope] = useState<'global' | 'extension'>(isAdmin ? 'global' : 'extension')
@@ -85,7 +85,7 @@ export default function ContactsPage() {
         setContacts(data)
       }
     } catch (e: any) {
-      setError(e.message || tr('Kontakte konnten nicht geladen werden', 'Contacts could not be loaded'))
+      setError(e.message || t('contacts.error.load'))
     } finally {
       setLoading(false)
     }
@@ -118,11 +118,11 @@ export default function ContactsPage() {
 
   const handleSave = async () => {
     if (!form.name.trim()) {
-      setError(tr('Name ist erforderlich', 'Name is required'))
+      setError(t('contacts.validation.nameRequired'))
       return
     }
     if (scope === 'extension' && !selectedExtension) {
-      setError(tr('Bitte eine Nebenstelle auswählen', 'Please select an extension'))
+      setError(t('contacts.validation.extensionRequired'))
       return
     }
     setSaving(true)
@@ -131,31 +131,31 @@ export default function ContactsPage() {
     try {
       if (editingId) {
         await api.updateContact(editingId, form)
-        setSuccess(tr('Kontakt aktualisiert', 'Contact updated'))
+        setSuccess(t('contacts.success.updated'))
       } else {
         await api.createContact({
           scope,
           owner_extension: scope === 'extension' ? selectedExtension : undefined,
           ...form,
         })
-        setSuccess(tr('Kontakt erstellt', 'Contact created'))
+        setSuccess(t('contacts.success.created'))
       }
       resetForm()
       await loadContacts()
     } catch (e: any) {
-      setError(e.message || tr('Speichern fehlgeschlagen', 'Save failed'))
+      setError(e.message || t('contacts.error.save'))
     } finally {
       setSaving(false)
     }
   }
 
   const handleDelete = async (id: number) => {
-    if (!confirm(tr('Kontakt wirklich löschen?', 'Really delete contact?'))) return
+    if (!confirm(t('contacts.confirm.delete'))) return
     try {
       await api.deleteContact(id)
       await loadContacts()
     } catch (e: any) {
-      setError(e.message || tr('Löschen fehlgeschlagen', 'Delete failed'))
+      setError(e.message || t('contacts.error.delete'))
     }
   }
 
@@ -171,7 +171,7 @@ export default function ContactsPage() {
       a.remove()
       URL.revokeObjectURL(url)
     } catch (e: any) {
-      setError(e.message || tr('Export fehlgeschlagen', 'Export failed'))
+      setError(e.message || t('contacts.error.export'))
     }
   }
 
@@ -180,10 +180,10 @@ export default function ContactsPage() {
     setSuccess('')
     try {
       await api.importContacts(scope, file, scope === 'extension' ? selectedExtension || undefined : undefined)
-      setSuccess(tr('Import erfolgreich', 'Import successful'))
+      setSuccess(t('contacts.success.import'))
       await loadContacts()
     } catch (e: any) {
-      setError(e.message || tr('Import fehlgeschlagen', 'Import failed'))
+      setError(e.message || t('contacts.error.import'))
     }
   }
 
@@ -195,8 +195,8 @@ export default function ContactsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-xl font-semibold text-content">{tr('Telefonbuch', 'Contacts')}</h1>
-          <p className="text-sm text-muted">{tr('Global und pro Nebenstelle verwaltete Kontakte', 'Contacts managed globally and per extension')}</p>
+          <h1 className="text-xl font-semibold text-content">{t('contacts.title')}</h1>
+          <p className="text-sm text-muted">{t('contacts.description')}</p>
         </div>
         <div className="flex items-center gap-2">
           <input
@@ -215,14 +215,14 @@ export default function ContactsPage() {
             className="inline-flex items-center gap-2 px-3 py-2 rounded-input bg-surface-subtle hover:bg-surface-subtle text-content"
           >
             <Upload className="w-4 h-4" />
-            {tr('Import', 'Import')}
+            {t('contacts.import')}
           </button>
           <button
             onClick={handleExport}
             className="inline-flex items-center gap-2 px-3 py-2 rounded-input bg-brand hover:bg-brand-hover text-on-primary"
           >
             <Download className="w-4 h-4" />
-            {tr('Export', 'Export')}
+            {t('contacts.export')}
           </button>
         </div>
       </div>
@@ -246,19 +246,20 @@ export default function ContactsPage() {
                 onClick={() => setScope('global')}
                 className={`px-3 py-2 rounded-input text-sm ${scope === 'global' ? 'bg-surface-accent text-link bg-surface-accent' : 'text-content hover:bg-surface-hover'}`}
               >
-                {tr('Globales Telefonbuch', 'Global contacts')}
+                {t('contacts.scope.global')}
               </button>
               <button
                 onClick={() => setScope('extension')}
                 className={`px-3 py-2 rounded-input text-sm ${scope === 'extension' ? 'bg-surface-accent text-link bg-surface-accent' : 'text-content hover:bg-surface-hover'}`}
               >
-                {tr('Nebenstellen-Telefonbuch', 'Extension contacts')}
+                {t('contacts.scope.extension')}
               </button>
               {scope === 'extension' && (
                 <select
                   value={selectedExtension || ''}
                   onChange={(e) => setExtension(e.target.value)}
                   className="px-3 py-2 border border-subtle rounded-input bg-surface text-content"
+                  aria-label={t('contacts.selectExtension')}
                 >
                   {extensions.map((p) => (
                     <option key={p.extension} value={p.extension}>
@@ -270,8 +271,8 @@ export default function ContactsPage() {
             </>
           ) : (
             <div className="text-sm text-content">
-              {tr('Nebenstellen-Telefonbuch', 'Extension contacts')}{' '}
-              {user?.extension ? `(${tr('Nebenstelle', 'Extension')} ${user.extension})` : ''}
+              {t('contacts.scope.extension')}{' '}
+              {user?.extension ? `(${t('contacts.extension')} ${user.extension})` : ''}
             </div>
           )}
         </div>
@@ -280,20 +281,20 @@ export default function ContactsPage() {
       <div className="bg-surface rounded-card shadow-sm p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-content">
-            {editingId ? tr('Kontakt bearbeiten', 'Edit contact') : tr('Kontakt anlegen', 'Create contact')}
+            {editingId ? t('contacts.form.editTitle') : t('contacts.form.createTitle')}
           </h2>
           {editingId && (
             <button
               onClick={resetForm}
               className="inline-flex items-center gap-2 text-sm text-muted hover:text-content"
             >
-              <X className="w-4 h-4" /> {tr('Abbrechen', 'Cancel')}
+              <X className="w-4 h-4" /> {t('common.cancel')}
             </button>
           )}
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-content mb-1">{tr('Name', 'Name')} *</label>
+            <label className="block text-sm font-medium text-content mb-1">{t('contacts.field.name')} *</label>
             <input
               type="text"
               value={form.name}
@@ -302,7 +303,7 @@ export default function ContactsPage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-content mb-1">{tr('Durchwahl', 'Extension')}</label>
+            <label className="block text-sm font-medium text-content mb-1">{t('contacts.field.extension')}</label>
             <input
               type="text"
               value={form.internal_extension}
@@ -311,7 +312,7 @@ export default function ContactsPage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-content mb-1">{tr('Externe Nummer', 'External number')}</label>
+            <label className="block text-sm font-medium text-content mb-1">{t('contacts.field.externalNumber')}</label>
             <input
               type="text"
               value={form.external_number}
@@ -320,7 +321,7 @@ export default function ContactsPage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-content mb-1">{tr('Firma', 'Company')}</label>
+            <label className="block text-sm font-medium text-content mb-1">{t('contacts.field.company')}</label>
             <input
               type="text"
               value={form.company}
@@ -329,7 +330,7 @@ export default function ContactsPage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-content mb-1">{tr('Tag/Gruppe', 'Tag/Group')}</label>
+            <label className="block text-sm font-medium text-content mb-1">{t('contacts.field.tagGroup')}</label>
             <input
               type="text"
               value={form.tag}
@@ -338,7 +339,7 @@ export default function ContactsPage() {
             />
           </div>
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-content mb-1">{tr('Notiz', 'Note')}</label>
+            <label className="block text-sm font-medium text-content mb-1">{t('contacts.field.note')}</label>
             <textarea
               value={form.note}
               onChange={(e) => setForm({ ...form, note: e.target.value })}
@@ -354,31 +355,31 @@ export default function ContactsPage() {
             className="inline-flex items-center gap-2 px-4 py-2 rounded-input bg-brand hover:bg-brand-hover text-on-primary disabled:bg-ink-400"
           >
             {editingId ? <Save className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-            {editingId ? tr('Speichern', 'Save') : tr('Anlegen', 'Create')}
+            {editingId ? t('contacts.form.save') : t('contacts.form.create')}
           </button>
         </div>
       </div>
 
       <div className="bg-surface rounded-card shadow-sm overflow-hidden">
         <div className="px-4 py-3 border-b border-subtle">
-          <h2 className="text-lg font-semibold text-content">{tr('Kontakte', 'Contacts')}</h2>
+          <h2 className="text-lg font-semibold text-content">{t('contacts.list.title')}</h2>
         </div>
         {loading ? (
-          <div className="p-6 text-muted">{tr('Lade...', 'Loading...')}</div>
+          <div className="p-6 text-muted">{t('contacts.loading')}</div>
         ) : contacts.length === 0 ? (
-          <div className="p-6 text-muted">{tr('Noch keine Kontakte vorhanden.', 'No contacts yet.')}</div>
+          <div className="p-6 text-muted">{t('contacts.empty')}</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-surface-subtle/50 text-left">
-                  <th className="px-4 py-3 font-medium text-content">{tr('Name', 'Name')}</th>
-                  <th className="px-4 py-3 font-medium text-content">{tr('Durchwahl', 'Extension')}</th>
-                  <th className="px-4 py-3 font-medium text-content">{tr('Extern', 'External')}</th>
-                  <th className="px-4 py-3 font-medium text-content">{tr('Firma', 'Company')}</th>
-                  <th className="px-4 py-3 font-medium text-content">{tr('Tag', 'Tag')}</th>
-                  <th className="px-4 py-3 font-medium text-content">{tr('Notiz', 'Note')}</th>
-                  <th className="px-4 py-3 font-medium text-content w-28">{tr('Aktionen', 'Actions')}</th>
+                  <th className="px-4 py-3 font-medium text-content">{t('contacts.field.name')}</th>
+                  <th className="px-4 py-3 font-medium text-content">{t('contacts.field.extension')}</th>
+                  <th className="px-4 py-3 font-medium text-content">{t('contacts.table.external')}</th>
+                  <th className="px-4 py-3 font-medium text-content">{t('contacts.field.company')}</th>
+                  <th className="px-4 py-3 font-medium text-content">{t('contacts.table.tag')}</th>
+                  <th className="px-4 py-3 font-medium text-content">{t('contacts.field.note')}</th>
+                  <th className="px-4 py-3 font-medium text-content w-28">{t('contacts.table.actions')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -396,12 +397,12 @@ export default function ContactsPage() {
                           onClick={() => startEdit(c)}
                           className="text-link hover:text-link-hover text-sm"
                         >
-                          {tr('Bearbeiten', 'Edit')}
+                          {t('contacts.action.edit')}
                         </button>
                         <button
                           onClick={() => handleDelete(c.id)}
                           className="text-danger hover:text-danger"
-                          title={tr('Löschen', 'Delete')}
+                          title={t('contacts.action.delete')}
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>

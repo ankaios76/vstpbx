@@ -31,11 +31,11 @@ interface AvailableDidGroup {
 }
 
 export default function GroupsPage() {
-  const { tr } = useI18n()
+  const { t } = useI18n()
   const STRATEGIES = [
-    { value: 'ringall', label: tr('Alle gleichzeitig', 'All at once') },
-    { value: 'roundrobin', label: tr('Rundruf (Round Robin)', 'Round robin') },
-    { value: 'leastrecent', label: tr('Am längsten frei', 'Least recently used') },
+    { value: 'ringall', label: t('groups.all.at.once') },
+    { value: 'roundrobin', label: t('groups.round.robin') },
+    { value: 'leastrecent', label: t('groups.least.recently.used') },
   ]
   const [groups, setGroups] = useState<RingGroup[]>([])
   const [peers, setPeers] = useState<SIPPeer[]>([])
@@ -92,7 +92,7 @@ export default function GroupsPage() {
       setPeers(peerData)
       setAvailableDids(didData)
     } catch (e: any) {
-      setError(e.message || tr('Daten konnten nicht geladen werden', 'Data could not be loaded'))
+      setError(e.message || t('groups.data.could.not.be.loaded'))
     } finally {
       setLoading(false)
     }
@@ -151,7 +151,7 @@ export default function GroupsPage() {
       if (!exists) {
         options.unshift({
           trunk_id: editing.inbound_trunk_id,
-          trunk_name: tr(`Leitung ${editing.inbound_trunk_id}`, `Trunk ${editing.inbound_trunk_id}`),
+          trunk_name: t('groups.trunkFallback', { id: editing.inbound_trunk_id }),
           dids: editing.inbound_did ? [editing.inbound_did] : [],
         })
       }
@@ -187,24 +187,24 @@ export default function GroupsPage() {
       setShowForm(false)
       await fetchAll()
     } catch (err: any) {
-      setError(err.message || tr('Fehler beim Speichern', 'Error while saving'))
+      setError(err.message || t('groups.error.while.saving'))
     } finally {
       setSaving(false)
     }
   }
 
   const handleDelete = async (group: RingGroup) => {
-    if (!confirm(tr(`Gruppe ${group.name} wirklich löschen?`, `Really delete group ${group.name}?`))) return
+    if (!confirm(t('groups.confirm.delete', { name: group.name }))) return
     try {
       await api.deleteRingGroup(group.id)
       await fetchAll()
     } catch (err: any) {
-      alert(err.message || tr('Fehler beim Löschen', 'Error while deleting'))
+      alert(err.message || t('groups.error.while.deleting'))
     }
   }
 
   if (loading) {
-    return <div className="p-6 text-muted">{tr('Lade Gruppen…', 'Loading groups...')}</div>
+    return <div className="p-6 text-muted">{t('groups.loading.groups')}</div>
   }
 
   return (
@@ -212,9 +212,9 @@ export default function GroupsPage() {
       <div className="bg-surface rounded-card shadow-sm border border-subtle p-6">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h2 className="text-lg font-semibold text-content">{tr('Gruppen (Sammelruf)', 'Ring groups')}</h2>
+            <h2 className="text-lg font-semibold text-content">{t('groups.ring.groups')}</h2>
             <p className="text-sm text-muted">
-              {tr('Richten Sie Sammelrufe mit verschiedenen Klingelstrategien ein. Mitglieder werden aus bestehenden Nebenstellen gewählt.', 'Configure ring groups with different ringing strategies. Members are chosen from existing extensions.')}
+              {t('groups.configure.ring.groups.with.different.ringing.strategies.members.are.chosen.from.existing.extensions')}
             </p>
           </div>
           <button
@@ -222,23 +222,23 @@ export default function GroupsPage() {
             className="inline-flex items-center gap-2 px-4 py-2 bg-brand hover:bg-brand-hover text-on-primary rounded-input text-sm font-medium"
           >
             <Plus className="w-4 h-4" />
-            {tr('Neue Gruppe', 'New group')}
+            {t('groups.new.group')}
           </button>
         </div>
 
         {groups.length === 0 ? (
-          <div className="mt-6 text-sm text-muted">{tr('Noch keine Gruppen angelegt.', 'No groups created yet.')}</div>
+          <div className="mt-6 text-sm text-muted">{t('groups.no.groups.created.yet')}</div>
         ) : (
           <div className="mt-6 overflow-x-auto">
             <table className="min-w-full text-sm">
               <thead>
                 <tr className="text-left text-muted border-b border-subtle">
-                  <th className="py-2 pr-4">{tr('Name', 'Name')}</th>
-                  <th className="py-2 pr-4">{tr('Nummer', 'Number')}</th>
-                  <th className="py-2 pr-4">{tr('Strategie', 'Strategy')}</th>
-                  <th className="py-2 pr-4">{tr('Mitglieder', 'Members')}</th>
-                  <th className="py-2 pr-4">{tr('Klingelzeit', 'Ring time')}</th>
-                  <th className="py-2 pr-4">{tr('Status', 'Status')}</th>
+                  <th className="py-2 pr-4">{t('groups.name')}</th>
+                  <th className="py-2 pr-4">{t('groups.number')}</th>
+                  <th className="py-2 pr-4">{t('groups.strategy')}</th>
+                  <th className="py-2 pr-4">{t('groups.members')}</th>
+                  <th className="py-2 pr-4">{t('groups.ring.time')}</th>
+                  <th className="py-2 pr-4">{t('settings.status')}</th>
                   <th className="py-2 pr-4"></th>
                 </tr>
               </thead>
@@ -256,7 +256,7 @@ export default function GroupsPage() {
                     <td className="py-3 pr-4 text-content">{g.ring_time || 20}s</td>
                     <td className="py-3 pr-4">
                       <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs ${g.enabled ? 'bg-surface-subtle text-success' : 'bg-surface-subtle text-muted'}`}>
-                        {g.enabled ? tr('Aktiv', 'Active') : tr('Inaktiv', 'Inactive')}
+                        {g.enabled ? t('settings.active') : t('groups.inactive')}
                       </span>
                     </td>
                     <td className="py-3 pr-4 text-right">
@@ -264,14 +264,14 @@ export default function GroupsPage() {
                         <button
                           onClick={() => openEdit(g)}
                           className="p-2 text-muted hover:text-link"
-                          title={tr('Bearbeiten', 'Edit')}
+                          title={t('groups.edit')}
                         >
                           <Edit2 className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleDelete(g)}
                           className="p-2 text-muted hover:text-danger"
-                          title={tr('Löschen', 'Delete')}
+                          title={t('groups.delete')}
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -292,7 +292,7 @@ export default function GroupsPage() {
               <div className="flex items-center gap-2">
                 <Users className="w-5 h-5 text-link" />
                 <h3 className="text-lg font-semibold text-content">
-                  {editing ? tr('Gruppe bearbeiten', 'Edit group') : tr('Gruppe anlegen', 'Create group')}
+                  {editing ? t('groups.edit.group') : t('groups.create.group')}
                 </h3>
               </div>
               <button
@@ -311,35 +311,35 @@ export default function GroupsPage() {
               )}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-content mb-1">{tr('Name', 'Name')}</label>
+                  <label className="block text-sm font-medium text-content mb-1">{t('groups.name')}</label>
                   <input
                     type="text"
                     value={form.name}
                     onChange={e => setForm({ ...form, name: e.target.value })}
                     className="w-full px-3 py-2 border border-subtle rounded-input focus:ring-2 focus:ring-link focus:border-link outline-none bg-surface text-content"
-                    placeholder={tr('z.B. Support', 'e.g. Support')}
+                    placeholder={t('groups.e.g.support')}
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-content mb-1">{tr('Gruppen-Nummer', 'Group number')}</label>
+                  <label className="block text-sm font-medium text-content mb-1">{t('groups.group.number')}</label>
                   <select
                     value={form.extension}
                     onChange={e => setForm({ ...form, extension: e.target.value })}
                     className="w-full px-3 py-2 border border-subtle rounded-input focus:ring-2 focus:ring-link focus:border-link outline-none bg-surface text-content"
                     required
                   >
-                    <option value="">{tr('Bitte wählen', 'Please select')}</option>
+                    <option value="">{t('groups.please.select')}</option>
                     {availableExtensions.map(ext => (
                       <option key={ext} value={ext}>{ext}</option>
                     ))}
                   </select>
                   {availableExtensions.length === 0 && (
-                    <div className="text-xs text-muted mt-1">{tr('Keine freien Nummern im Bereich 1000–1999.', 'No free numbers in the 1000–1999 range.')}</div>
+                    <div className="text-xs text-muted mt-1">{t('groups.no.free.numbers.in.the.1000.1999.range')}</div>
                   )}
                 </div>
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-content mb-1">{tr('Eingehende Rufnummer (optional)', 'Inbound number (optional)')}</label>
+                  <label className="block text-sm font-medium text-content mb-1">{t('groups.inbound.number.optional')}</label>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                     <select
                       value={form.inbound_trunk_id ?? ''}
@@ -349,7 +349,7 @@ export default function GroupsPage() {
                       }}
                       className="w-full px-3 py-2 border border-subtle rounded-input focus:ring-2 focus:ring-link focus:border-link outline-none bg-surface text-content"
                     >
-                      <option value="">{tr('Leitung wählen', 'Select trunk')}</option>
+                      <option value="">{t('groups.select.trunk')}</option>
                       {trunkOptions.map(t => (
                         <option key={t.trunk_id} value={t.trunk_id}>{t.trunk_name}</option>
                       ))}
@@ -360,16 +360,16 @@ export default function GroupsPage() {
                       className="w-full px-3 py-2 border border-subtle rounded-input focus:ring-2 focus:ring-link focus:border-link outline-none bg-surface text-content"
                       disabled={!form.inbound_trunk_id}
                     >
-                      <option value="">{tr('Rufnummer wählen', 'Select number')}</option>
+                      <option value="">{t('groups.select.number')}</option>
                       {didOptions.map(d => (
                         <option key={d} value={d}>{d}</option>
                       ))}
                     </select>
                   </div>
-                  <div className="text-xs text-muted mt-1">{tr('Wählt eine freie Nummer aus dem Nummernblock der Leitung und legt automatisch eine Inbound-Route an.', 'Selects a free number from the trunk block and creates an inbound route automatically.')}</div>
+                  <div className="text-xs text-muted mt-1">{t('groups.selects.a.free.number.from.the.trunk.block.and.creates.an.inbound.route.automatically')}</div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-content mb-1">{tr('Strategie', 'Strategy')}</label>
+                  <label className="block text-sm font-medium text-content mb-1">{t('groups.strategy')}</label>
                   <select
                     value={form.strategy}
                     onChange={e => setForm({ ...form, strategy: e.target.value })}
@@ -381,7 +381,7 @@ export default function GroupsPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-content mb-1">{tr('Klingelzeit (Sek.)', 'Ring time (sec)')}</label>
+                  <label className="block text-sm font-medium text-content mb-1">{t('groups.ring.time.sec')}</label>
                   <input
                     type="number"
                     min={5}
@@ -394,10 +394,10 @@ export default function GroupsPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-content mb-2">{tr('Mitglieder (bestehende Nebenstellen)', 'Members (existing extensions)')}</label>
+                <label className="block text-sm font-medium text-content mb-2">{t('groups.members.existing.extensions')}</label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-48 overflow-auto border border-subtle rounded-input p-3">
                   {memberOptions.length === 0 && (
-                    <div className="text-sm text-muted">{tr('Keine Nebenstellen verfügbar', 'No extensions available')}</div>
+                    <div className="text-sm text-muted">{t('groups.no.extensions.available')}</div>
                   )}
                   {memberOptions.map(p => (
                     <label key={p.extension} className="flex items-center gap-2 text-sm text-content">
@@ -421,7 +421,7 @@ export default function GroupsPage() {
                     onChange={e => setForm({ ...form, enabled: e.target.checked })}
                     className="rounded border-subtle text-link focus:ring-link"
                   />
-                  {tr('Aktiv', 'Active')}
+                  {t('settings.active')}
                 </label>
 
                 <div className="flex items-center gap-2">
@@ -430,14 +430,14 @@ export default function GroupsPage() {
                     onClick={() => setShowForm(false)}
                     className="px-4 py-2 text-sm rounded-input border border-subtle text-content"
                   >
-                    {tr('Abbrechen', 'Cancel')}
+                    {t('common.cancel')}
                   </button>
                   <button
                     type="submit"
                     disabled={saving}
                     className="px-4 py-2 text-sm rounded-input bg-brand hover:bg-brand-hover text-on-primary disabled:opacity-60"
                   >
-                    {saving ? tr('Speichern…', 'Saving...') : tr('Speichern', 'Save')}
+                    {saving ? t('settings.saving') : t('settings.save')}
                   </button>
                 </div>
               </div>

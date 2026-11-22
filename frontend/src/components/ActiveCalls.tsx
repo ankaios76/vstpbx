@@ -15,15 +15,15 @@ interface ActiveCallsProps {
 }
 
 export default function ActiveCalls({ calls }: ActiveCallsProps) {
-  const { tr } = useI18n()
+  const { t } = useI18n()
   if (calls.length === 0) {
     return (
       <div className="bg-surface rounded-input shadow p-6">
         <div className="flex items-center gap-2 mb-4">
           <Phone className="w-5 h-5 text-muted" />
-          <h2 className="text-lg font-semibold text-content">{tr('Aktive Anrufe', 'Active Calls')}</h2>
+          <h2 className="text-lg font-semibold text-content">{t('activeCalls.title')}</h2>
         </div>
-        <p className="text-muted text-center py-8">{tr('Keine aktiven Anrufe', 'No active calls')}</p>
+        <p className="text-muted text-center py-8">{t('activeCalls.empty')}</p>
       </div>
     )
   }
@@ -33,10 +33,10 @@ export default function ActiveCalls({ calls }: ActiveCallsProps) {
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Phone className="w-5 h-5 text-success" />
-          <h2 className="text-lg font-semibold text-content">{tr('Aktive Anrufe', 'Active Calls')}</h2>
+          <h2 className="text-lg font-semibold text-content">{t('activeCalls.title')}</h2>
         </div>
         <span className="bg-surface-subtle text-success px-3 py-1 rounded-full text-sm font-medium">
-          {calls.length} {tr('aktiv', 'active')}
+          {t('activeCalls.count', { count: calls.length })}
         </span>
       </div>
 
@@ -50,7 +50,7 @@ export default function ActiveCalls({ calls }: ActiveCallsProps) {
 }
 
 function CallItem({ call }: { call: Call }) {
-  const { tr } = useI18n()
+  const { t } = useI18n()
   const [duration, setDuration] = useState(0)
 
   useEffect(() => {
@@ -92,9 +92,9 @@ function CallItem({ call }: { call: Call }) {
   const getStateLabel = (state: string) => {
     switch (state) {
       case 'connected':
-        return tr('Verbunden', 'Connected')
+        return t('activeCalls.connected')
       case 'ringing':
-        return tr('Klingelt', 'Ringing')
+        return t('activeCalls.ringing')
       default:
         return state
     }
@@ -109,9 +109,9 @@ function CallItem({ call }: { call: Call }) {
 
         <div>
           <div className="flex items-center gap-2">
-            <span className="font-medium text-content">{call.caller || tr('Unbekannt', 'Unknown')}</span>
+            <span className="font-medium text-content">{call.caller || t('extensionDetail.unknown')}</span>
             <span className="text-muted">&rarr;</span>
-            <span className="font-medium text-content">{call.destination || tr('Unbekannt', 'Unknown')}</span>
+            <span className="font-medium text-content">{call.destination || t('extensionDetail.unknown')}</span>
           </div>
           <div className="flex items-center gap-2 mt-1">
             <span className={`text-xs px-2 py-0.5 rounded ${getStateColor(call.state)}`}>

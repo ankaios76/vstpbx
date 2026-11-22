@@ -12,14 +12,14 @@ import { AuthProvider, useAuth } from './context/AuthContext'
 import { ThemeProvider, useTheme } from './context/ThemeContext'
 import { Logo } from './components/Logo'
 import { api } from './services/api'
-import { useI18n } from './context/I18nContext'
+import { LANGUAGES, useI18n } from './context/I18nContext'
 
 type Page = 'dashboard' | 'extension-detail' | 'trunk-detail' | 'cdr' | 'settings' | 'faq' | 'contacts'
 
 function AppContent() {
   const { user, isAuthenticated, isLoading, logout } = useAuth()
   const { theme, toggleTheme } = useTheme()
-  const { tr } = useI18n()
+  const { t, lang, setLang } = useI18n()
   const [currentPage, setCurrentPage] = useState<Page>('dashboard')
   const [selectedExtension, setSelectedExtension] = useState<string>('')
   const [selectedTrunkId, setSelectedTrunkId] = useState<number>(0)
@@ -33,6 +33,10 @@ function AppContent() {
   const [pwError, setPwError] = useState('')
   const [pwSuccess, setPwSuccess] = useState('')
   const [pwSaving, setPwSaving] = useState(false)
+
+  const displayName = user?.role === 'admin' && user.full_name === 'Administrator'
+    ? t('user.adminName')
+    : user?.full_name || user?.username
 
   const navigateToExtensionDetail = (ext: string) => {
     setSelectedExtension(ext)
@@ -48,23 +52,23 @@ function AppContent() {
     setPwError('')
     setPwSuccess('')
     if (newPw.length < 6) {
-      setPwError(tr('Das neue Passwort muss mindestens 6 Zeichen lang sein', 'The new password must be at least 6 characters long'))
+      setPwError(t('password.validation.minimumLength'))
       return
     }
     if (newPw !== newPwRepeat) {
-      setPwError(tr('Die Passwörter stimmen nicht überein', 'The passwords do not match'))
+      setPwError(t('password.validation.mismatch'))
       return
     }
     setPwSaving(true)
     try {
       await api.changeMyPassword(currentPw, newPw)
-      setPwSuccess(tr('Passwort erfolgreich geändert', 'Password successfully changed'))
+      setPwSuccess(t('password.change.success'))
       setCurrentPw('')
       setNewPw('')
       setNewPwRepeat('')
       setTimeout(() => setShowPwModal(false), 1500)
     } catch (err: any) {
-      setPwError(err.message || tr('Passwort konnte nicht geändert werden', 'Password could not be changed'))
+      setPwError(err.message || t('password.change.error'))
     } finally {
       setPwSaving(false)
     }
@@ -82,7 +86,7 @@ function AppContent() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-surface-subtle flex items-center justify-center">
-        <div className="text-muted">{tr('Lade…', 'Loading…')}</div>
+        <div className="text-muted">{t('app.loading')}</div>
       </div>
     )
   }
@@ -92,13 +96,13 @@ function AppContent() {
   }
 
   const navigation = [
-    { id: 'dashboard' as Page, name: tr('Dashboard', 'Dashboard'), icon: Phone },
-    { id: 'cdr' as Page, name: tr('Anrufverlauf', 'Call History'), icon: History },
-    { id: 'contacts' as Page, name: tr('Telefonbuch', 'Contacts'), icon: BookUser },
-    { id: 'faq' as Page, name: 'FAQ', icon: HelpCircle },
+    { id: 'dashboard' as Page, name: t('nav.dashboard'), icon: Phone },
+    { id: 'cdr' as Page, name: t('nav.callHistory'), icon: History },
+    { id: 'contacts' as Page, name: t('nav.contacts'), icon: BookUser },
+    { id: 'faq' as Page, name: t('nav.faq'), icon: HelpCircle },
     ...(user?.role === 'admin'
       ? [
-          { id: 'settings' as Page, name: tr('Einstellungen', 'Settings'), icon: Settings },
+          { id: 'settings' as Page, name: t('nav.settings'), icon: Settings },
         ]
       : []),
   ]
@@ -159,10 +163,23 @@ function AppContent() {
               })}
 
               {/* Theme toggle */}
+              <select
+                value={lang}
+                onChange={(event) => setLang(event.target.value)}
+                className="ml-2 px-2 py-1 rounded-input border border-subtle bg-surface text-content text-sm"
+                aria-label={t('language.label')}
+              >
+                {Object.entries(LANGUAGES).map(([code, language]) => (
+                  <option key={code} value={code}>{language.name}</option>
+                ))}
+                {!(lang in LANGUAGES) && (
+                  <option value={lang}>{lang.toUpperCase()}</option>
+                )}
+              </select>
               <button
                 onClick={toggleTheme}
                 className="p-2 rounded-input text-muted hover:bg-surface-hover transition-colors ml-2"
-                title={theme === 'dark' ? tr('Light Mode', 'Light Mode') : tr('Dark Mode', 'Dark Mode')}
+                title={theme === 'dark' ? t('theme.light') : t('theme.dark')}
               >
                 {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
               </button>
@@ -172,7 +189,7 @@ function AppContent() {
                 <button
                   onClick={openPwModal}
                   className="flex items-center gap-1.5 text-sm text-muted hover:text-content px-1 py-1 rounded-input hover:bg-surface-hover transition-colors"
-                  title={`${user?.full_name || user?.username} – ${tr('Passwort ändern', 'Change password')}`}
+                  title={`${displayName} – ${t('password.change')}`}
                 >
                   {user?.avatar_url ? (
                     <img
@@ -187,14 +204,14 @@ function AppContent() {
                   )}
                   {user?.role === 'admin' && (
                     <span className="text-xs bg-surface-accent text-content px-1.5 py-0.5 rounded-full">
-                      {tr('Admin', 'Admin')}
+                      {t('user.admin')}
                     </span>
                   )}
                 </button>
                 <button
                   onClick={logout}
                   className="flex items-center gap-1 text-muted hover:text-danger transition-colors px-2 py-1 rounded-input hover:bg-surface-hover"
-                  title={tr('Abmelden', 'Sign out')}
+                  title={t('nav.signOut')}
                 >
                   <LogOut className="w-4 h-4" />
                 </button>
@@ -251,14 +268,14 @@ function AppContent() {
               className="flex items-center gap-3 w-full px-4 py-3 text-content border-t border-subtle"
             >
               <KeyRound className="w-5 h-5" />
-              {tr('Passwort ändern', 'Change password')}
+              {t('password.change')}
             </button>
             <button
               onClick={logout}
               className="flex items-center gap-3 w-full px-4 py-3 text-danger border-t border-subtle"
             >
               <LogOut className="w-5 h-5" />
-              {tr('Abmelden', 'Sign out')} ({user?.username})
+              {t('nav.signOut')} ({user?.username})
             </button>
           </nav>
         )}
@@ -272,10 +289,10 @@ function AppContent() {
       {/* Footer */}
       <footer className="bg-surface-subtle border-t border-subtle mt-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-xs text-muted space-y-1">
-          <p>VstPBX &middot; Open-Source-Telefonanlage</p>
-          <p>Konzept, Entwicklung und Design, &copy; {new Date().getFullYear()} Norbert Hengsteler. {tr('Alle Rechte vorbehalten.', 'All rights reserved.')}</p>
+          <p>{t('footer.brand')}</p>
+          <p>{t('footer.credits', { year: new Date().getFullYear() })}</p>
           <p>
-            {tr('Telefonanlage auf Basis von', 'PBX based on')}{' '}
+            {t('footer.basedOn')}{' '}
             <a
               href="https://www.asterisk.org"
               target="_blank"
@@ -284,7 +301,7 @@ function AppContent() {
             >
               Asterisk
             </a>
-            , einem Open-Source-Projekt von Sangoma Technologies
+            , {t('footer.projectBy')}
           </p>
         </div>
       </footer>
@@ -294,7 +311,7 @@ function AppContent() {
         <div className="fixed inset-0 bg-ink-900 bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-surface rounded-card border border-subtle p-6 w-full max-w-md">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="font-headline text-lg font-semibold text-content">{tr('Passwort ändern', 'Change password')}</h2>
+              <h2 className="font-headline text-lg font-semibold text-content">{t('password.change')}</h2>
               <button onClick={() => setShowPwModal(false)} className="text-muted hover:text-content">
                 <X className="w-5 h-5" />
               </button>
@@ -313,7 +330,7 @@ function AppContent() {
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-content mb-1">{tr('Aktuelles Passwort', 'Current password')}</label>
+                <label className="block text-sm font-medium text-content mb-1">{t('password.current')}</label>
                 <input
                   type="password"
                   value={currentPw}
@@ -323,17 +340,17 @@ function AppContent() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-content mb-1">{tr('Neues Passwort', 'New password')}</label>
+                <label className="block text-sm font-medium text-content mb-1">{t('password.new')}</label>
                 <input
                   type="password"
                   value={newPw}
                   onChange={(e) => setNewPw(e.target.value)}
                   className="w-full px-3 py-2 border border-subtle rounded-input focus:ring-2 focus:ring-link focus:border-link outline-none bg-surface text-content"
-                  placeholder={tr('Mindestens 6 Zeichen', 'At least 6 characters')}
+                  placeholder={t('password.minimumLength')}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-content mb-1">{tr('Neues Passwort wiederholen', 'Repeat new password')}</label>
+                <label className="block text-sm font-medium text-content mb-1">{t('password.repeat')}</label>
                 <input
                   type="password"
                   value={newPwRepeat}
@@ -349,14 +366,14 @@ function AppContent() {
                 onClick={() => setShowPwModal(false)}
                 className="border border-brand text-brand hover:bg-surface-hover px-4 py-2 rounded-input transition-colors"
               >
-                {tr('Abbrechen', 'Cancel')}
+                {t('common.cancel')}
               </button>
               <button
                 onClick={handleChangePassword}
                 disabled={pwSaving || !currentPw || !newPw || !newPwRepeat}
                 className="bg-brand hover:bg-brand-hover disabled:opacity-50 text-on-primary px-4 py-2 rounded-input transition-colors"
               >
-                {pwSaving ? tr('Speichern...', 'Saving...') : tr('Passwort ändern', 'Change password')}
+                {pwSaving ? t('common.saving') : t('password.change')}
               </button>
             </div>
           </div>

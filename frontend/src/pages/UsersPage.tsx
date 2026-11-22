@@ -40,7 +40,7 @@ interface TrunkInfo {
 }
 
 export default function UsersPage() {
-  const { tr } = useI18n()
+  const { t } = useI18n()
   const [users, setUsers] = useState<UserEntry[]>([])
   const [peers, setPeers] = useState<PeerEntry[]>([])
   const [routes, setRoutes] = useState<RouteEntry[]>([])
@@ -101,7 +101,7 @@ export default function UsersPage() {
       trunksData.forEach((t: TrunkInfo) => nameMap.set(t.id, t.name))
       setTrunkNames(nameMap)
     } catch {
-      setError(tr('Daten konnten nicht geladen werden', 'Data could not be loaded'))
+      setError(t('users.data.could.not.be.loaded'))
     } finally {
       setLoading(false)
     }
@@ -135,7 +135,7 @@ export default function UsersPage() {
       for (const route of extRoutes) {
         if (!combined.has(route.trunk_id)) {
           combined.set(route.trunk_id, {
-            trunk_name: trunkNames.get(route.trunk_id) || tr(`Leitung ${route.trunk_id}`, `Trunk ${route.trunk_id}`),
+            trunk_name: trunkNames.get(route.trunk_id) || t('users.trunkFallback', { id: route.trunk_id }),
             dids: new Set()
           })
         }
@@ -178,7 +178,7 @@ export default function UsersPage() {
       const result = await api.generatePassword()
       setNewExtData({ ...newExtData, secret: result.password })
     } catch {
-      setError(tr('Passwort konnte nicht generiert werden', 'Password could not be generated'))
+      setError(t('users.password.could.not.be.generated'))
     } finally {
       setGeneratingPw(false)
     }
@@ -275,10 +275,10 @@ export default function UsersPage() {
       fetchData()
 
       if (warnings.length > 0) {
-        setError(tr(`Benutzer erstellt, aber: ${warnings.join('; ')}`, `User created, but: ${warnings.join('; ')}`))
+        setError(t('users.createdWithWarnings', { warnings: warnings.join('; ') }))
       }
     } catch (err: any) {
-      setError(err.message || tr('Benutzer konnte nicht erstellt werden', 'User could not be created'))
+      setError(err.message || t('users.user.could.not.be.created'))
     }
   }
 
@@ -290,17 +290,17 @@ export default function UsersPage() {
       setPasswordUserId(null)
       setNewPassword('')
     } catch (err: any) {
-      setError(err.message || tr('Passwort konnte nicht geändert werden', 'Password could not be changed'))
+      setError(err.message || t('users.password.could.not.be.changed'))
     }
   }
 
   const handleDelete = async (id: number, username: string) => {
-    if (!confirm(tr(`Benutzer "${username}" wirklich löschen?`, `Really delete user "${username}"?`))) return
+    if (!confirm(t('users.confirm.delete', { username }))) return
     try {
       await api.deleteUser(id)
       fetchData()
     } catch (err: any) {
-      setError(err.message || tr('Benutzer konnte nicht gelöscht werden', 'User could not be deleted'))
+      setError(err.message || t('users.user.could.not.be.deleted'))
     }
   }
 
@@ -418,7 +418,7 @@ export default function UsersPage() {
       setEditUser(null)
       fetchData()
     } catch (err: any) {
-      setError(err.message || tr('Änderungen konnten nicht gespeichert werden', 'Changes could not be saved'))
+      setError(err.message || t('users.changes.could.not.be.saved'))
     }
   }
 
@@ -438,7 +438,7 @@ export default function UsersPage() {
   }
 
   if (loading) {
-    return <div className="text-center py-12 text-muted">{tr('Lade Benutzer...', 'Loading users...')}</div>
+    return <div className="text-center py-12 text-muted">{t('users.loading.users')}</div>
   }
 
   // DID pools for create form
@@ -457,7 +457,7 @@ export default function UsersPage() {
           className="flex items-center gap-2 bg-brand hover:bg-brand-hover text-on-primary px-4 py-2 rounded-input transition-colors"
         >
           <UserPlus className="w-5 h-5" />
-          {tr('Neuer Benutzer', 'New user')}
+          {t('users.new.user')}
         </button>
       </div>
 
@@ -469,7 +469,7 @@ export default function UsersPage() {
 
       {showForm && (
         <div className="bg-surface rounded-card shadow-sm border border-subtle p-6">
-          <h2 className="text-lg font-semibold text-content mb-4">{tr('Neuen Benutzer anlegen', 'Create new user')}</h2>
+          <h2 className="text-lg font-semibold text-content mb-4">{t('users.create.new.user')}</h2>
           <form onSubmit={handleCreate} className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
             {/* Avatar upload for create form */}
@@ -495,7 +495,7 @@ export default function UsersPage() {
                   </div>
                 </div>
                 <div className="text-sm text-muted">
-                  {createAvatarFile ? createAvatarFile.name : tr('Foto hochladen (optional)', 'Upload photo (optional)')}
+                  {createAvatarFile ? createAvatarFile.name : t('users.upload.photo.optional')}
                 </div>
                 <input
                   ref={createFileInputRef}
@@ -508,66 +508,66 @@ export default function UsersPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-content mb-1">{tr('Benutzername', 'Username')}</label>
+              <label className="block text-sm font-medium text-content mb-1">{t('settings.username')}</label>
               <input
                 type="text"
                 value={formData.username}
                 onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                 required
                 className="w-full px-3 py-2 border border-subtle rounded-input focus:ring-2 focus:ring-link focus:border-link outline-none bg-surface text-content"
-                placeholder={tr('benutzername', 'username')}
+                placeholder={t('users.username')}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-content mb-1">{tr('Passwort', 'Password')}</label>
+              <label className="block text-sm font-medium text-content mb-1">{t('settings.password')}</label>
               <input
                 type="password"
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 required
                 className="w-full px-3 py-2 border border-subtle rounded-input focus:ring-2 focus:ring-link focus:border-link outline-none bg-surface text-content"
-                placeholder={tr('Passwort', 'Password')}
+                placeholder={t('settings.password')}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-content mb-1">{tr('Name', 'Name')}</label>
+              <label className="block text-sm font-medium text-content mb-1">{t('users.name')}</label>
               <input
                 type="text"
                 value={formData.full_name}
                 onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
                 className="w-full px-3 py-2 border border-subtle rounded-input focus:ring-2 focus:ring-link focus:border-link outline-none bg-surface text-content"
-                placeholder={tr('Vor- und Nachname', 'Full name')}
+                placeholder={t('users.full.name')}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-content mb-1">{tr('E-Mail', 'Email')}</label>
+              <label className="block text-sm font-medium text-content mb-1">{t('users.email')}</label>
               <input
                 type="email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 className="w-full px-3 py-2 border border-subtle rounded-input focus:ring-2 focus:ring-link focus:border-link outline-none bg-surface text-content"
-                placeholder="email@example.com"
+                placeholder={t('users.emailPlaceholder')}
               />
               <p className="mt-1 text-xs text-warning">
-                {tr('An diese Adresse werden die Zugangsdaten gesendet.', 'Login credentials will be sent to this address.')}
+                {t('users.login.credentials.will.be.sent.to.this.address')}
               </p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-content mb-1">{tr('Rolle', 'Role')}</label>
+              <label className="block text-sm font-medium text-content mb-1">{t('users.role')}</label>
               <select
                 value={formData.role}
                 onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                 className="w-full px-3 py-2 border border-subtle rounded-input focus:ring-2 focus:ring-link focus:border-link outline-none bg-surface text-content"
               >
-                <option value="user">User</option>
-                <option value="admin">{tr('Admin', 'Admin')}</option>
+                <option value="user">{t('users.role.user')}</option>
+                <option value="admin">{t('users.admin')}</option>
               </select>
             </div>
 
             {/* Extension: toggle between existing and new */}
             <div className="md:col-span-3">
               <div className="flex items-center gap-3 mb-2">
-                <label className="block text-sm font-medium text-content">{tr('Nebenstelle', 'Extension')}</label>
+                <label className="block text-sm font-medium text-content">{t('users.extension')}</label>
                 <button
                   type="button"
                   onClick={() => { setCreateNewExt(!createNewExt); setFormData({ ...formData, extension: '' }); setNewExtData({ extension: '', secret: '', caller_id: '' }) }}
@@ -578,7 +578,7 @@ export default function UsersPage() {
                   }`}
                 >
                   <Plus className="w-3 h-3" />
-                  {createNewExt ? tr('Neue Nebenstelle', 'New extension') : tr('Neu anlegen', 'Create new')}
+                  {createNewExt ? t('users.new.extension') : t('users.create.new')}
                 </button>
               </div>
 
@@ -588,7 +588,7 @@ export default function UsersPage() {
                   onChange={(e) => setFormData({ ...formData, extension: e.target.value })}
                   className="w-full md:w-1/3 px-3 py-2 border border-subtle rounded-input focus:ring-2 focus:ring-link focus:border-link outline-none bg-surface text-content"
                 >
-                  <option value="">{tr('-- keine --', '-- none --')}</option>
+                  <option value="">{t('users.none')}</option>
                   {getAvailableExtensions().map(p => (
                     <option key={p.id} value={p.extension}>
                       {p.extension} {p.caller_id ? `(${p.caller_id})` : ''}
@@ -598,25 +598,25 @@ export default function UsersPage() {
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-surface-subtle border border-green-500 rounded-input">
                   <div>
-                    <label className="block text-sm font-medium text-content mb-1">{tr('Extension-Nr.', 'Extension number')}</label>
+                    <label className="block text-sm font-medium text-content mb-1">{t('users.extension.number')}</label>
                     <input
                       type="text"
                       value={newExtData.extension}
                       onChange={(e) => setNewExtData({ ...newExtData, extension: e.target.value })}
                       className="w-full px-3 py-2 border border-subtle rounded-input focus:ring-2 focus:ring-success focus:border-green-500 outline-none bg-surface text-content"
-                      placeholder={tr('z.B. 1001', 'e.g. 1001')}
+                      placeholder={t('users.e.g.1001')}
                       required={createNewExt}
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-content mb-1">{tr('SIP-Passwort', 'SIP password')}</label>
+                    <label className="block text-sm font-medium text-content mb-1">{t('users.sip.password')}</label>
                     <div className="flex gap-2">
                       <input
                         type="text"
                         value={newExtData.secret}
                         onChange={(e) => setNewExtData({ ...newExtData, secret: e.target.value })}
                         className="flex-1 px-3 py-2 border border-subtle rounded-input focus:ring-2 focus:ring-success focus:border-green-500 outline-none font-mono text-sm bg-surface text-content"
-                        placeholder={tr('SIP-Passwort', 'SIP password')}
+                        placeholder={t('users.sip.password')}
                         required={createNewExt}
                       />
                       <button
@@ -624,20 +624,20 @@ export default function UsersPage() {
                         onClick={handleGeneratePassword}
                         disabled={generatingPw}
                         className="px-3 py-2 bg-surface-subtle hover:bg-surface-hover border border-subtle rounded-input transition-colors"
-                        title={tr('Sicheres Passwort generieren', 'Generate strong password')}
+                        title={t('users.generate.strong.password')}
                       >
                         <RefreshCw className={`w-4 h-4 text-muted ${generatingPw ? 'animate-spin' : ''}`} />
                       </button>
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-content mb-1">{tr('Caller-ID (optional)', 'Caller ID (optional)')}</label>
+                    <label className="block text-sm font-medium text-content mb-1">{t('users.caller.id.optional')}</label>
                     <input
                       type="text"
                       value={newExtData.caller_id}
                       onChange={(e) => setNewExtData({ ...newExtData, caller_id: e.target.value })}
                       className="w-full px-3 py-2 border border-subtle rounded-input focus:ring-2 focus:ring-success focus:border-green-500 outline-none bg-surface text-content"
-                      placeholder={tr('Wird aus Name übernommen', 'Derived from name')}
+                      placeholder={t('users.derived.from.name')}
                     />
                   </div>
                 </div>
@@ -652,7 +652,7 @@ export default function UsersPage() {
                   <div>
                     <div className="flex items-center gap-2 mb-2">
                       <PhoneOutgoing className="w-4 h-4 text-link" />
-                      <label className="text-sm font-medium text-content">{tr('Ausgehende Rufnummer', 'Outbound number')}</label>
+                      <label className="text-sm font-medium text-content">{t('users.outbound.number')}</label>
                     </div>
                     <select
                       value={formDid ? `${formTrunkId}:${formDid}` : ''}
@@ -669,7 +669,7 @@ export default function UsersPage() {
                       }}
                       className="w-full md:w-2/3 px-3 py-2 border border-subtle rounded-input focus:ring-2 focus:ring-link focus:border-link outline-none text-sm bg-surface text-content"
                     >
-                      <option value="">{tr('-- keine Rufnummer --', '-- no number --')}</option>
+                      <option value="">{t('users.no.number')}</option>
                       {createDidsPool.map(group => (
                         <optgroup key={group.trunk_id} label={group.trunk_name}>
                           {group.dids.map(did => (
@@ -685,8 +685,8 @@ export default function UsersPage() {
                     <div>
                       <div className="flex items-center gap-2 mb-2">
                         <PhoneIncoming className="w-4 h-4 text-success" />
-                        <label className="text-sm font-medium text-content">{tr('Eingehende Rufnummern', 'Inbound numbers')}</label>
-                        <span className="text-xs text-muted">{tr('(weitere Rufnummern, die bei dieser Nebenstelle klingeln)', '(additional numbers that ring on this extension)')}</span>
+                        <label className="text-sm font-medium text-content">{t('users.inbound.numbers')}</label>
+                        <span className="text-xs text-muted">{t('users.additional.numbers.that.ring.on.this.extension')}</span>
                       </div>
                       <div className="space-y-2">
                         {createInboundPool.map(group => (
@@ -727,14 +727,14 @@ export default function UsersPage() {
                 type="submit"
                 className="bg-brand hover:bg-brand-hover text-on-primary px-6 py-2 rounded-input transition-colors"
               >
-                {tr('Anlegen', 'Create')}
+                {t('users.create')}
               </button>
               <button
                 type="button"
                 onClick={() => setShowForm(false)}
                 className="bg-surface-subtle hover:bg-surface-hover text-content px-6 py-2 rounded-input transition-colors"
               >
-                {tr('Abbrechen', 'Cancel')}
+                {t('common.cancel')}
               </button>
             </div>
           </form>
@@ -745,12 +745,12 @@ export default function UsersPage() {
         <table className="w-full">
           <thead className="bg-surface-subtle border-b border-subtle">
             <tr>
-              <th className="text-left px-6 py-3 text-xs font-medium text-muted uppercase">{tr('Benutzer', 'User')}</th>
-              <th className="text-left px-6 py-3 text-xs font-medium text-muted uppercase">{tr('E-Mail', 'Email')}</th>
-              <th className="text-left px-6 py-3 text-xs font-medium text-muted uppercase">{tr('Nebenstelle', 'Extension')}</th>
-              <th className="text-left px-6 py-3 text-xs font-medium text-muted uppercase">{tr('Rufnummern', 'Numbers')}</th>
-              <th className="text-left px-6 py-3 text-xs font-medium text-muted uppercase">{tr('Rolle', 'Role')}</th>
-              <th className="text-right px-6 py-3 text-xs font-medium text-muted uppercase">{tr('Aktionen', 'Actions')}</th>
+              <th className="text-left px-6 py-3 text-xs font-medium text-muted uppercase">{t('settings.user')}</th>
+              <th className="text-left px-6 py-3 text-xs font-medium text-muted uppercase">{t('users.email')}</th>
+              <th className="text-left px-6 py-3 text-xs font-medium text-muted uppercase">{t('users.extension')}</th>
+              <th className="text-left px-6 py-3 text-xs font-medium text-muted uppercase">{t('users.numbers')}</th>
+              <th className="text-left px-6 py-3 text-xs font-medium text-muted uppercase">{t('users.role')}</th>
+              <th className="text-right px-6 py-3 text-xs font-medium text-muted uppercase">{t('users.actions')}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-subtle">
@@ -829,14 +829,14 @@ export default function UsersPage() {
                       <button
                         onClick={() => openEditModal(u)}
                         className="text-muted hover:text-content transition-colors"
-                        title={tr('Bearbeiten', 'Edit')}
+                        title={t('users.edit')}
                       >
                         <Pencil className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => { setPasswordUserId(u.id); setPasswordUsername(u.username); setNewPassword('') }}
                         className="text-link hover:text-link transition-colors"
-                        title={tr('Passwort ändern', 'Change password')}
+                        title={t('users.change.password')}
                       >
                         <KeyRound className="w-4 h-4" />
                       </button>
@@ -844,7 +844,7 @@ export default function UsersPage() {
                         <button
                           onClick={() => handleDelete(u.id, u.username)}
                           className="text-danger hover:text-danger transition-colors"
-                          title={tr('Löschen', 'Delete')}
+                          title={t('users.delete')}
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -857,7 +857,7 @@ export default function UsersPage() {
           </tbody>
         </table>
         {users.length === 0 && (
-          <div className="text-center py-8 text-muted">{tr('Keine Benutzer vorhanden', 'No users found')}</div>
+          <div className="text-center py-8 text-muted">{t('users.no.users.found')}</div>
         )}
       </div>
 
@@ -867,7 +867,7 @@ export default function UsersPage() {
           <div className="bg-surface rounded-card shadow-lg p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-semibold text-content">
-                {tr('Benutzer bearbeiten', 'Edit user')}: {editUser.username}
+                {t('users.edit.user')}: {editUser.username}
               </h2>
               <button onClick={() => setEditUser(null)} className="text-muted hover:text-content">
                 <X className="w-5 h-5" />
@@ -895,7 +895,7 @@ export default function UsersPage() {
                   <Upload className="w-5 h-5 text-on-primary opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
               </div>
-              <div className="text-sm text-muted">{tr('Klicken zum Ändern', 'Click to change')}</div>
+              <div className="text-sm text-muted">{t('users.click.to.change')}</div>
               <input
                 ref={fileInputRef}
                 type="file"
@@ -907,7 +907,7 @@ export default function UsersPage() {
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-content mb-1">{tr('Name', 'Name')}</label>
+                <label className="block text-sm font-medium text-content mb-1">{t('users.name')}</label>
                 <input
                   type="text"
                   value={editData.full_name}
@@ -916,7 +916,7 @@ export default function UsersPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-content mb-1">{tr('E-Mail', 'Email')}</label>
+                <label className="block text-sm font-medium text-content mb-1">{t('users.email')}</label>
                 <input
                   type="email"
                   value={editData.email}
@@ -925,18 +925,18 @@ export default function UsersPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-content mb-1">{tr('Rolle', 'Role')}</label>
+                <label className="block text-sm font-medium text-content mb-1">{t('users.role')}</label>
                 <select
                   value={editData.role}
                   onChange={(e) => setEditData({ ...editData, role: e.target.value })}
                   className="w-full px-3 py-2 border border-subtle rounded-input focus:ring-2 focus:ring-link focus:border-link outline-none bg-surface text-content"
                 >
-                  <option value="user">User</option>
-                  <option value="admin">{tr('Admin', 'Admin')}</option>
+                  <option value="user">{t('users.role.user')}</option>
+                  <option value="admin">{t('users.admin')}</option>
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-content mb-1">{tr('Nebenstelle', 'Extension')}</label>
+                <label className="block text-sm font-medium text-content mb-1">{t('users.extension')}</label>
                 <select
                   value={editExtension}
                   onChange={(e) => {
@@ -964,7 +964,7 @@ export default function UsersPage() {
                   }}
                   className="w-full px-3 py-2 border border-subtle rounded-input focus:ring-2 focus:ring-link focus:border-link outline-none bg-surface text-content"
                 >
-                  <option value="">{tr('-- keine --', '-- none --')}</option>
+                  <option value="">{t('users.none')}</option>
                   {getAvailableExtensions(editUser.id).map(p => (
                     <option key={p.id} value={p.extension}>
                       {p.extension} {p.caller_id ? `(${p.caller_id})` : ''}
@@ -980,7 +980,7 @@ export default function UsersPage() {
                   <div>
                     <div className="flex items-center gap-2 mb-2">
                       <PhoneOutgoing className="w-4 h-4 text-link" />
-                      <label className="text-sm font-medium text-content">{tr('Ausgehende Rufnummer', 'Outbound number')}</label>
+                      <label className="text-sm font-medium text-content">{t('users.outbound.number')}</label>
                     </div>
                     <select
                       value={editDid ? `${editTrunkId}:${editDid}` : ''}
@@ -997,11 +997,11 @@ export default function UsersPage() {
                       }}
                       className="w-full px-3 py-2 border border-subtle rounded-input focus:ring-2 focus:ring-link focus:border-link outline-none text-sm bg-surface text-content"
                     >
-                      <option value="">{tr('-- keine Rufnummer --', '-- no number --')}</option>
+                      <option value="">{t('users.no.number')}</option>
                       {/* Show currently assigned outbound DID */}
                       {editDid && editTrunkId && (
                         <option value={`${editTrunkId}:${editDid}`}>
-                          {editDid} {tr('(aktuell)', '(current)')}
+                          {editDid} {t('users.current')}
                         </option>
                       )}
                       {editDidsPool.map(group => (
@@ -1021,8 +1021,8 @@ export default function UsersPage() {
                     <div>
                       <div className="flex items-center gap-2 mb-2">
                         <PhoneIncoming className="w-4 h-4 text-success" />
-                        <label className="text-sm font-medium text-content">{tr('Eingehende Rufnummern', 'Inbound numbers')}</label>
-                        <span className="text-xs text-muted">{tr('(weitere)', '(additional)')}</span>
+                        <label className="text-sm font-medium text-content">{t('users.inbound.numbers')}</label>
+                        <span className="text-xs text-muted">{t('users.additional')}</span>
                       </div>
                       <div className="space-y-2">
                         {editInboundPool.map(group => (
@@ -1063,13 +1063,13 @@ export default function UsersPage() {
                 onClick={() => setEditUser(null)}
                 className="bg-surface-subtle hover:bg-surface-hover text-content px-4 py-2 rounded-input transition-colors"
               >
-                {tr('Abbrechen', 'Cancel')}
+                {t('common.cancel')}
               </button>
               <button
                 onClick={handleEditSave}
                 className="bg-brand hover:bg-brand-hover text-on-primary px-4 py-2 rounded-input transition-colors"
               >
-                {tr('Speichern', 'Save')}
+                {t('settings.save')}
               </button>
             </div>
           </div>
@@ -1081,13 +1081,13 @@ export default function UsersPage() {
         <div className="fixed inset-0 bg-ink-900 bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-surface rounded-card shadow-lg p-6 w-full max-w-md">
             <h2 className="text-lg font-semibold text-content mb-4">
-              {tr('Passwort ändern', 'Change password')}: {passwordUsername}
+              {t('users.change.password')}: {passwordUsername}
             </h2>
             <input
               type="password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              placeholder={tr('Neues Passwort (min. 6 Zeichen)', 'New password (min. 6 characters)')}
+              placeholder={t('users.new.password.min.6.characters')}
               className="w-full px-3 py-2 border border-subtle rounded-input focus:ring-2 focus:ring-link focus:border-link outline-none mb-4 bg-surface text-content"
               autoFocus
               onKeyDown={(e) => e.key === 'Enter' && handlePasswordChange()}
@@ -1097,14 +1097,14 @@ export default function UsersPage() {
                 onClick={() => { setPasswordUserId(null); setNewPassword('') }}
                 className="bg-surface-subtle hover:bg-surface-hover text-content px-4 py-2 rounded-input transition-colors"
               >
-                {tr('Abbrechen', 'Cancel')}
+                {t('common.cancel')}
               </button>
               <button
                 onClick={handlePasswordChange}
                 disabled={newPassword.length < 6}
                 className="bg-brand hover:bg-brand-hover disabled:bg-ink-400 text-on-primary px-4 py-2 rounded-input transition-colors"
               >
-                {tr('Speichern', 'Save')}
+                {t('settings.save')}
               </button>
             </div>
           </div>

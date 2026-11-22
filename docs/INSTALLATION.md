@@ -92,7 +92,7 @@ The installer asks:
 |---|---|
 | **Use this IP?** | Enter if the detected address is right. Otherwise `n` and type your own. |
 | **Do you use a reverse proxy?** | `1` = web interface reachable on the whole network (fine for a home network). `2` = reachable only on the server itself, so you need a proxy in front (chapter 9). When in doubt: `2`, and put HTTPS in front. |
-| **Language** | `1` German, `2` English. It is fixed when the frontend is built. |
+| **Language** | `1` English, `2` Italian, `3` German, or `4` a locale code. Installer translations are stored in `installer/locales/<language-code>.lang`; missing installer translations fall back to English. |
 | **SIP port** | Enter for 5060, or another port (see SIP ALG above). |
 | **Admin password** | Leave empty to get a random one. It is stored in `.env`. |
 | **Home Assistant** | `N` unless you need it. You can add it later in the settings. |
