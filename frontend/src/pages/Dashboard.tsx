@@ -57,15 +57,15 @@ export default function Dashboard({ onExtensionClick, onTrunkClick, onNavigate }
   const [routes, setRoutes] = useState<InboundRoute[]>([])
   const [recentCalls, setRecentCalls] = useState<CDRRecord[]>([])
   const [loading, setLoading] = useState(true)
-  const { tr, lang } = useI18n()
+  const { t, locale } = useI18n()
   const PROVIDER_INFO: Record<string, { label: string; logo?: string }> = {
     plusnet_basic: { label: 'Plusnet IPfonie Basic/Extended', logo: '/logos/plusnet.svg' },
     plusnet_connect: { label: 'Plusnet IPfonie Extended Connect', logo: '/logos/plusnet.svg' },
     dusnet: { label: 'dus.net', logo: '/logos/dusnet.svg' },
-    telekom_deutschlandlan: { label: tr('Telekom DeutschlandLAN SIP-Trunk', 'Telekom DeutschlandLAN SIP Trunk'), logo: '/logos/telekom.jpg' },
-    telekom_companyflex: { label: tr('Telekom CompanyFlex SIP-Trunk', 'Telekom CompanyFlex SIP Trunk'), logo: '/logos/telekom.jpg' },
-    telekom_allip: { label: tr('Telekom All-IP (Privat)', 'Telekom All-IP (Residential)'), logo: '/logos/telekom.jpg' },
-    iliad_it: { label: tr('Iliad (Italien)', 'Iliad (Italy)') },
+    telekom_deutschlandlan: { label: t('dashboard.provider.telekomDeutschlandLan'), logo: '/logos/telekom.jpg' },
+    telekom_companyflex: { label: t('dashboard.provider.telekomCompanyFlex'), logo: '/logos/telekom.jpg' },
+    telekom_allip: { label: t('dashboard.provider.telekomAllIp'), logo: '/logos/telekom.jpg' },
+    iliad_it: { label: t('dashboard.provider.iliad') },
     fritzbox: { label: 'AVM FRITZ!Box' },
   }
 
@@ -81,7 +81,7 @@ export default function Dashboard({ onExtensionClick, onTrunkClick, onNavigate }
       setRoutes(routesData || [])
       setRecentCalls(cdrData || [])
     } catch (error) {
-      console.error(tr('Status konnte nicht geladen werden:', 'Failed to fetch status:'), error)
+      console.error(t('dashboard.error.statusFetch'), error)
     } finally {
       setLoading(false)
     }
@@ -97,16 +97,19 @@ export default function Dashboard({ onExtensionClick, onTrunkClick, onNavigate }
   const totalEndpoints = status?.endpoints?.length || 0
 
   const { user } = useAuth()
+  const displayName = user?.role === 'admin' && user.full_name === 'Administrator'
+    ? t('user.adminName')
+    : user?.full_name || user?.username || t('greeting.userFallback')
 
   const getGreeting = () => {
     const hour = new Date().getHours()
-    if (hour < 10) return tr('Moin', 'Good morning')
-    if (hour < 17) return tr('Hallo', 'Hello')
-    return tr('Guten Abend', 'Good evening')
+    if (hour < 10) return t('greeting.morning')
+    if (hour < 17) return t('greeting.day')
+    return t('greeting.evening')
   }
 
   const getFormattedDate = () => {
-    return new Date().toLocaleDateString(lang === 'en' ? 'en-US' : 'de-DE', {
+    return new Date().toLocaleDateString(locale, {
       weekday: 'long',
       day: '2-digit',
       month: '2-digit',
@@ -126,9 +129,9 @@ export default function Dashboard({ onExtensionClick, onTrunkClick, onNavigate }
     const now = new Date()
     const isToday = d.toDateString() === now.toDateString()
     if (isToday) {
-      return d.toLocaleTimeString(lang === 'en' ? 'en-US' : 'de-DE', { hour: '2-digit', minute: '2-digit' })
+      return d.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })
     }
-    return d.toLocaleDateString(lang === 'en' ? 'en-US' : 'de-DE', { day: '2-digit', month: '2-digit' }) + ' ' + d.toLocaleTimeString(lang === 'en' ? 'en-US' : 'de-DE', { hour: '2-digit', minute: '2-digit' })
+    return d.toLocaleDateString(locale, { day: '2-digit', month: '2-digit' }) + ' ' + d.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })
   }
 
   // Find extension display name
@@ -201,11 +204,11 @@ export default function Dashboard({ onExtensionClick, onTrunkClick, onNavigate }
   const getDirectionLabel = (direction: 'inbound' | 'outbound' | 'internal') => {
     switch (direction) {
       case 'inbound':
-        return tr('Eingehend', 'Inbound')
+        return t('dashboard.direction.inbound')
       case 'outbound':
-        return tr('Ausgehend', 'Outbound')
+        return t('dashboard.direction.outbound')
       case 'internal':
-        return tr('Intern', 'Internal')
+        return t('dashboard.direction.internal')
     }
   }
 
@@ -228,7 +231,7 @@ export default function Dashboard({ onExtensionClick, onTrunkClick, onNavigate }
         <div className="bg-surface rounded-card border border-subtle px-6 h-full flex items-center">
           <div>
             <p className="text-2xl font-bold text-content">
-              {getGreeting()}, {user?.full_name || user?.username || tr('User', 'User')}
+              {getGreeting()}, {displayName}
             </p>
             <p className="text-sm text-muted mt-1">{getFormattedDate()}</p>
           </div>
@@ -239,7 +242,7 @@ export default function Dashboard({ onExtensionClick, onTrunkClick, onNavigate }
           <div>
             <p className="text-sm text-muted">VstPBX</p>
             <p className="text-2xl font-bold text-content">
-              {status?.asterisk === 'connected' ? tr('Online', 'Online') : tr('Offline', 'Offline')}
+              {status?.asterisk === 'connected' ? t('dashboard.status.online') : t('dashboard.status.offline')}
             </p>
             {status?.version && (
               <p className="text-xs text-muted mt-0.5">v{status.version}</p>
@@ -255,7 +258,7 @@ export default function Dashboard({ onExtensionClick, onTrunkClick, onNavigate }
         {/* Endpoints */}
         <div className="bg-surface rounded-card border border-subtle px-6 h-full flex items-center">
           <div className="flex-1 min-w-0">
-            <p className="text-sm text-muted">{tr('Endpoints Online', 'Endpoints Online')}</p>
+            <p className="text-sm text-muted">{t('dashboard.endpointsOnline')}</p>
             <p className="text-2xl font-bold text-content">
               {onlineEndpoints} / {totalEndpoints}
             </p>
@@ -279,7 +282,7 @@ export default function Dashboard({ onExtensionClick, onTrunkClick, onNavigate }
                   const providerKey = (ep as any).provider || ''
                   const provider = PROVIDER_INFO[providerKey]
                   return (
-                    <div key={ep.endpoint} className="relative" title={`${ep.user_name || ep.display_name || ep.endpoint} (${isOnline ? tr('online', 'online') : tr('offline', 'offline')})`}>
+                    <div key={ep.endpoint} className="relative" title={`${ep.user_name || ep.display_name || ep.endpoint} (${isOnline ? t('dashboard.status.online') : t('dashboard.status.offline')})`}>
                       {isTrunk && provider?.logo ? (
                         <img
                           src={provider.logo}
@@ -305,7 +308,7 @@ export default function Dashboard({ onExtensionClick, onTrunkClick, onNavigate }
                   <button
                     onClick={() => onNavigate?.('settings')}
                     className={`${avatarSize} rounded-full bg-surface-subtle text-muted flex items-center justify-center font-semibold ring-2 ring-surface hover:bg-surface-hover transition-colors cursor-pointer`}
-                    title={tr('Alle Endpoints anzeigen', 'Show all endpoints')}
+                    title={t('dashboard.showEndpoints')}
                   >
                     +{overflow}
                   </button>
@@ -321,11 +324,11 @@ export default function Dashboard({ onExtensionClick, onTrunkClick, onNavigate }
       <div className="bg-surface rounded-card border border-subtle p-6">
         <div className="flex items-center gap-2 mb-4">
           <Server className="w-6 h-6 text-muted" />
-          <h2 className="text-lg font-semibold text-content">{tr('Leitungen', 'Trunks')}</h2>
+          <h2 className="text-lg font-semibold text-content">{t('dashboard.trunks')}</h2>
         </div>
 
         {loading ? (
-          <p className="text-muted text-center py-4">{tr('Laden...', 'Loading...')}</p>
+          <p className="text-muted text-center py-4">{t('dashboard.loading')}</p>
         ) : status?.endpoints?.filter(e => e.type === 'trunk').length ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {status.endpoints.filter(e => e.type === 'trunk').map(endpoint => {
@@ -343,7 +346,7 @@ export default function Dashboard({ onExtensionClick, onTrunkClick, onNavigate }
                   className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${
                     endpoint.status === 'online' ? 'bg-success' : 'bg-muted'
                   }`}
-                  title={endpoint.status === 'online' ? 'Registriert' : 'Nicht registriert'}
+                  title={endpoint.status === 'online' ? t('dashboard.endpoint.registered') : t('dashboard.endpoint.notRegistered')}
                 />
                 {provider?.logo ? (
                   <img
@@ -368,7 +371,7 @@ export default function Dashboard({ onExtensionClick, onTrunkClick, onNavigate }
             })}
           </div>
         ) : (
-          <p className="text-muted text-center py-4">{tr('Keine Leitungen konfiguriert', 'No trunks configured')}</p>
+          <p className="text-muted text-center py-4">{t('dashboard.noTrunks')}</p>
         )}
       </div>
 
@@ -376,11 +379,11 @@ export default function Dashboard({ onExtensionClick, onTrunkClick, onNavigate }
       <div className="bg-surface rounded-card border border-subtle p-6">
         <div className="flex items-center gap-2 mb-4">
           <Phone className="w-6 h-6 text-muted" />
-          <h2 className="text-lg font-semibold text-content">{tr('Nebenstellen', 'Extensions')}</h2>
+          <h2 className="text-lg font-semibold text-content">{t('dashboard.extensions')}</h2>
         </div>
 
         {loading ? (
-          <p className="text-muted text-center py-4">{tr('Laden...', 'Loading...')}</p>
+          <p className="text-muted text-center py-4">{t('dashboard.loading')}</p>
         ) : status?.endpoints?.filter(e => e.type !== 'trunk').length ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {status.endpoints.filter(e => e.type !== 'trunk').map(endpoint => (
@@ -431,7 +434,7 @@ export default function Dashboard({ onExtensionClick, onTrunkClick, onNavigate }
             ))}
           </div>
         ) : (
-          <p className="text-muted text-center py-4">{tr('Keine Nebenstellen registriert', 'No extensions registered')}</p>
+          <p className="text-muted text-center py-4">{t('dashboard.noExtensions')}</p>
         )}
       </div>
 
@@ -440,19 +443,19 @@ export default function Dashboard({ onExtensionClick, onTrunkClick, onNavigate }
         <div className="px-6 py-4 border-b border-subtle flex justify-between items-center">
           <div className="flex items-center gap-2">
             <History className="w-6 h-6 text-muted" />
-            <h2 className="text-lg font-semibold text-content">{tr('Letzte Anrufe', 'Recent Calls')}</h2>
+            <h2 className="text-lg font-semibold text-content">{t('dashboard.recentCalls')}</h2>
           </div>
           <button
             onClick={() => onNavigate?.('cdr')}
             className="flex items-center gap-1 text-sm text-link hover:text-link-hover font-medium transition-colors"
           >
-            {tr('Alle Anrufe', 'All calls')}
+            {t('dashboard.allCalls')}
             <ArrowRight className="w-4 h-4" />
           </button>
         </div>
 
         {loading ? (
-          <div className="px-6 py-8 text-center text-muted">{tr('Laden...', 'Loading...')}</div>
+          <div className="px-6 py-8 text-center text-muted">{t('dashboard.loading')}</div>
         ) : recentCalls.length > 0 ? (
           <div className="divide-y divide-subtle">
             {recentCalls.map(call => {
@@ -491,7 +494,7 @@ export default function Dashboard({ onExtensionClick, onTrunkClick, onNavigate }
             })}
           </div>
         ) : (
-          <div className="px-6 py-8 text-center text-muted">{tr('Keine Anrufe vorhanden', 'No calls found')}</div>
+          <div className="px-6 py-8 text-center text-muted">{t('dashboard.noCalls')}</div>
         )}
       </div>
     </div>

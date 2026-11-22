@@ -92,7 +92,7 @@ Der Installer stellt dir diese Fragen:
 |---|---|
 | **Use this IP?** | Enter, wenn die erkannte Adresse stimmt. Sonst `n` und eigene eintragen. |
 | **Nutzt du einen Reverse Proxy?** | `1` = Weboberfläche im ganzen Netz erreichbar (gut fürs Heimnetz). `2` = nur auf dem Server selbst erreichbar; dann brauchst du einen Proxy davor (Kapitel 9). Im Zweifel `2` und HTTPS davor setzen. |
-| **Sprache** | `1` Deutsch, `2` Englisch. Die Sprache wird beim Bauen festgelegt. |
+| **Sprache** | `1` Englisch, `2` Italienisch, `3` Deutsch oder `4` ein Sprachcode. Installer-Übersetzungen liegen in `installer/locales/<Sprachcode>.lang`; fehlende Installer-Übersetzungen verwenden Englisch als Fallback. |
 | **SIP-Port** | Enter für 5060, oder ein anderer Port (siehe SIP-ALG oben). |
 | **Admin-Passwort** | Leer lassen, dann erzeugt der Installer ein zufälliges. Es steht danach in der Datei `.env`. |
 | **Home Assistant** | `N`, wenn du es nicht brauchst. Lässt sich später in den Einstellungen nachholen. |

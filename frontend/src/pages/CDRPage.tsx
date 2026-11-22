@@ -47,7 +47,7 @@ export default function CDRPage() {
   const [filterSrc, setFilterSrc] = useState('')
   const [filterDst, setFilterDst] = useState('')
   const [filterDisposition, setFilterDisposition] = useState('')
-  const { tr, lang } = useI18n()
+  const { t, locale } = useI18n()
 
   const fetchCDR = async () => {
     setLoading(true)
@@ -66,7 +66,7 @@ export default function CDRPage() {
       setRecords(recordsData)
       setStats(statsData)
     } catch (error) {
-      console.error(tr('CDR konnte nicht geladen werden:', 'Failed to fetch CDR:'), error)
+      console.error(t('cdr.error.fetch'), error)
     } finally {
       setLoading(false)
     }
@@ -102,17 +102,22 @@ export default function CDRPage() {
   const handleBlock = async (record: CDRRecord) => {
     const number = normalize(record.src)
     if (!number) return
-    if (!confirm(
-      `Anrufe von ${record.src} kuenftig nach ${blockDestination} umleiten?\n\n` +
-      `Der Anrufer erreicht dich damit nicht mehr.`
-    )) return
+    if (!confirm(t('cdr.blocklist.confirm', {
+      number: record.src || '',
+      destination: blockDestination,
+    }))) return
     setBlockBusy(number)
     setBlockError(null)
     try {
-      await api.blockCaller({ number, description: `Gesperrt aus der Anrufliste am ${new Date().toLocaleDateString('de-DE')}` })
+      await api.blockCaller({
+        number,
+        description: t('cdr.blocklist.description', {
+          date: new Date().toLocaleDateString(locale),
+        }),
+      })
       await fetchBlocklist()
     } catch (e: any) {
-      setBlockError(e?.message || 'Nummer konnte nicht gesperrt werden.')
+      setBlockError(e?.message || t('cdr.blocklist.errorBlock'))
     } finally {
       setBlockBusy(null)
     }
@@ -127,7 +132,7 @@ export default function CDRPage() {
       await api.setBlockAnonymous(enabled)
     } catch (e: any) {
       setBlockAnonymous(previous)
-      setBlockError(e?.message || 'Einstellung konnte nicht gespeichert werden.')
+      setBlockError(e?.message || t('cdr.blocklist.errorSaveSetting'))
     } finally {
       setAnonBusy(false)
     }
@@ -140,7 +145,7 @@ export default function CDRPage() {
       await api.unblockCaller(entry.id)
       await fetchBlocklist()
     } catch (e: any) {
-      setBlockError(e?.message || 'Sperre konnte nicht aufgehoben werden.')
+      setBlockError(e?.message || t('cdr.blocklist.errorUnblock'))
     } finally {
       setBlockBusy(null)
     }
@@ -171,7 +176,7 @@ export default function CDRPage() {
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr)
-    return date.toLocaleString(lang === 'en' ? 'en-US' : 'de-DE', {
+    return date.toLocaleString(locale, {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
@@ -189,7 +194,7 @@ export default function CDRPage() {
           <div className="bg-surface rounded-input shadow p-4">
             <div className="flex items-center gap-2 text-muted mb-1">
               <Phone className="w-4 h-4" />
-              <span className="text-sm">{tr('Gesamt', 'Total')}</span>
+              <span className="text-sm">{t('cdr.stats.total')}</span>
             </div>
             <p className="text-2xl font-bold text-content">{stats.total_calls}</p>
           </div>
@@ -197,7 +202,7 @@ export default function CDRPage() {
           <div className="bg-surface rounded-input shadow p-4">
             <div className="flex items-center gap-2 text-success mb-1">
               <Phone className="w-4 h-4" />
-              <span className="text-sm">{tr('Angenommen', 'Answered')}</span>
+              <span className="text-sm">{t('cdr.stats.answered')}</span>
             </div>
             <p className="text-2xl font-bold text-success">{stats.answered_calls}</p>
           </div>
@@ -205,7 +210,7 @@ export default function CDRPage() {
           <div className="bg-surface rounded-input shadow p-4">
             <div className="flex items-center gap-2 text-warning mb-1">
               <PhoneMissed className="w-4 h-4" />
-              <span className="text-sm">{tr('Verpasst', 'Missed')}</span>
+              <span className="text-sm">{t('cdr.stats.missed')}</span>
             </div>
             <p className="text-2xl font-bold text-warning">{stats.missed_calls}</p>
           </div>
@@ -213,7 +218,7 @@ export default function CDRPage() {
           <div className="bg-surface rounded-input shadow p-4">
             <div className="flex items-center gap-2 text-link mb-1">
               <Clock className="w-4 h-4" />
-              <span className="text-sm">{tr('Ø Dauer', 'Avg duration')}</span>
+              <span className="text-sm">{t('cdr.stats.averageDuration')}</span>
             </div>
             <p className="text-2xl font-bold text-link">{formatDuration(Math.round(stats.avg_duration))}</p>
           </div>
@@ -228,10 +233,10 @@ export default function CDRPage() {
         >
           <Ban className="w-6 h-6 text-muted" />
           <h2 className="font-semibold text-content">
-            Gesperrte Anrufer{blocked.length > 0 ? ` (${blocked.length})` : ''}
+            {t('cdr.blocklist.title')}{blocked.length > 0 ? ` (${blocked.length})` : ''}
           </h2>
           <span className="ml-auto text-sm text-muted">
-            {showBlocklist ? 'einklappen' : 'anzeigen'}
+            {showBlocklist ? t('cdr.blocklist.collapse') : t('cdr.blocklist.show')}
           </span>
         </button>
 
@@ -240,7 +245,7 @@ export default function CDRPage() {
             <div className="flex flex-wrap items-end gap-3">
               <div>
                 <label className="block text-sm text-muted mb-1">
-                  Gesperrte Anrufer umleiten nach
+                  {t('cdr.blocklist.destination')}
                 </label>
                 <input
                   type="text"
@@ -248,12 +253,12 @@ export default function CDRPage() {
                   onChange={(e) => setBlockDestination(e.target.value)}
                   onBlur={() => api.setBlocklistDestination(blockDestination)
                     .then(fetchBlocklist)
-                    .catch((e: any) => setBlockError(e?.message || 'Ziel konnte nicht gespeichert werden.'))}
+                    .catch((e: any) => setBlockError(e?.message || t('cdr.blocklist.errorSaveDestination')))}
                   className="px-3 py-2 bg-surface text-content border border-subtle rounded-input focus:ring-2 focus:ring-link focus:border-link"
                 />
               </div>
               <p className="text-sm text-muted max-w-md">
-                Gilt für neu gesperrte Nummern. Bereits gesperrte behalten ihr Ziel.
+                {t('cdr.blocklist.destinationHint')}
               </p>
             </div>
 
@@ -267,15 +272,13 @@ export default function CDRPage() {
               />
               <span className="text-sm">
                 <span className="font-medium text-content">
-                  Anrufer mit unterdrückter Rufnummer sperren
+                  {t('cdr.blocklist.anonymous')}
                 </span>
                 <span className="block text-muted mt-0.5">
-                  Betrifft Anrufe ganz ohne Rufnummer und solche, die als „nicht anzeigen“
-                  gekennzeichnet sind. Sie werden auf dasselbe Ziel umgeleitet.
-                  Achtung: manche Behörden und Arztpraxen rufen grundsätzlich anonym an.
+                  {t('cdr.blocklist.anonymousHint')}
                 </span>
                 {anonBusy && (
-                  <span className="block text-muted mt-1">Dialplan wird neu geschrieben…</span>
+                  <span className="block text-muted mt-1">{t('cdr.blocklist.updating')}</span>
                 )}
               </span>
             </label>
@@ -286,7 +289,7 @@ export default function CDRPage() {
 
             {blocked.length === 0 ? (
               <p className="text-sm text-muted">
-                Niemand gesperrt. In der Anrufliste unten steht bei jedem Anruf ein Knopf „Sperren“.
+                {t('cdr.blocklist.empty')}
               </p>
             ) : (
               <ul className="divide-y divide-subtle">
@@ -303,7 +306,7 @@ export default function CDRPage() {
                       className="ml-auto inline-flex items-center gap-1 text-xs text-content hover:text-danger border border-subtle rounded px-2 py-1 transition disabled:opacity-50"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
-                      Sperre aufheben
+                      {t('cdr.blocklist.unblock')}
                     </button>
                   </li>
                 ))}
@@ -317,28 +320,28 @@ export default function CDRPage() {
       <div className="bg-surface rounded-input shadow p-4">
         <div className="flex items-center gap-2 mb-4">
           <Filter className="w-6 h-6 text-muted" />
-          <h2 className="font-semibold text-content">{tr('Filter', 'Filter')}</h2>
+          <h2 className="font-semibold text-content">{t('cdr.filters.title')}</h2>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
-            <label className="block text-sm text-muted mb-1">{tr('Von (Quelle)', 'From (source)')}</label>
+            <label className="block text-sm text-muted mb-1">{t('cdr.filters.source')}</label>
             <input
               type="text"
               value={filterSrc}
               onChange={(e) => setFilterSrc(e.target.value)}
-              placeholder={tr('z.B. 1000', 'e.g. 1000')}
+              placeholder={t('cdr.filters.sourcePlaceholder')}
               className="w-full px-3 py-2 bg-surface text-content border border-subtle rounded-input focus:ring-2 focus:ring-link focus:border-link"
             />
           </div>
           
           <div>
-            <label className="block text-sm text-muted mb-1">{tr('Nach (Ziel)', 'To (destination)')}</label>
+            <label className="block text-sm text-muted mb-1">{t('cdr.filters.destination')}</label>
             <input
               type="text"
               value={filterDst}
               onChange={(e) => setFilterDst(e.target.value)}
-              placeholder={tr('z.B. 1001', 'e.g. 1001')}
+              placeholder={t('cdr.filters.destinationPlaceholder')}
               className="w-full px-3 py-2 bg-surface text-content border border-subtle rounded-input focus:ring-2 focus:ring-link focus:border-link"
             />
           </div>
@@ -350,11 +353,13 @@ export default function CDRPage() {
               className="flex items-center gap-2 px-4 py-2 bg-brand text-on-primary rounded-input hover:bg-brand-hover"
             >
               <Search className="w-4 h-4" />
-              {tr('Suchen', 'Search')}
+              {t('cdr.filters.search')}
             </button>
             <button
               onClick={clearFilters}
               className="flex items-center gap-2 px-4 py-2 bg-surface-subtle text-content rounded-input hover:bg-surface-hover"
+              aria-label={t('cdr.filters.clear')}
+              title={t('cdr.filters.clear')}
             >
               <RefreshCw className="w-4 h-4" />
             </button>
@@ -365,24 +370,24 @@ export default function CDRPage() {
       {/* CDR Table */}
       <div className="bg-surface rounded-input shadow overflow-hidden">
         <div className="px-6 py-4 border-b border-subtle">
-          <h2 className="font-semibold text-content">{tr('Anrufverlauf', 'Call history')}</h2>
+          <h2 className="font-semibold text-content">{t('cdr.title')}</h2>
         </div>
         
         {loading ? (
-          <div className="p-8 text-center text-muted">{tr('Laden...', 'Loading...')}</div>
+          <div className="p-8 text-center text-muted">{t('cdr.loading')}</div>
         ) : records.length === 0 ? (
-          <div className="p-8 text-center text-muted">{tr('Keine Anrufe gefunden', 'No calls found')}</div>
+          <div className="p-8 text-center text-muted">{t('cdr.empty')}</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-surface-subtle">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase">{tr('Zeit', 'Time')}</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase">{tr('Von', 'From')}</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase">{tr('Nach', 'To')}</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase">{tr('Dauer', 'Duration')}</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase">{tr('Gesprächszeit', 'Billable time')}</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-muted uppercase">Aktion</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase">{t('cdr.columns.time')}</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase">{t('cdr.columns.from')}</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase">{t('cdr.columns.to')}</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase">{t('cdr.columns.duration')}</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase">{t('cdr.columns.billableTime')}</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-muted uppercase">{t('cdr.columns.action')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-subtle">
@@ -417,21 +422,24 @@ export default function CDRPage() {
                             if (entry) handleUnblock(entry)
                           }}
                           disabled={blockBusy === normalize(record.src)}
-                          title={`Sperre für ${record.src} aufheben`}
+                          title={t('cdr.blocklist.unblockTitle', { number: record.src || '' })}
                           className="inline-flex items-center gap-1 text-xs text-danger hover:text-content border border-red-500 border-red-500 rounded px-2 py-1 transition disabled:opacity-50"
                         >
                           <Ban className="w-3.5 h-3.5" />
-                          {blockBusy === normalize(record.src) ? 'Moment…' : 'Entsperren'}
+                          {blockBusy === normalize(record.src) ? t('cdr.blocklist.unblocking') : t('cdr.blocklist.unblock')}
                         </button>
                       ) : normalize(record.src) ? (
                         <button
                           onClick={() => handleBlock(record)}
                           disabled={blockBusy === normalize(record.src)}
-                          title={`Anrufe von ${record.src} nach ${blockDestination} umleiten`}
+                          title={t('cdr.blocklist.redirectTitle', {
+                            number: record.src || '',
+                            destination: blockDestination,
+                          })}
                           className="inline-flex items-center gap-1 text-xs text-content hover:text-danger border border-subtle rounded px-2 py-1 transition disabled:opacity-50"
                         >
                           <Ban className="w-3.5 h-3.5" />
-                          {blockBusy === normalize(record.src) ? 'Sperre…' : 'Sperren'}
+                          {blockBusy === normalize(record.src) ? t('cdr.blocklist.blocking') : t('cdr.blocklist.block')}
                         </button>
                       ) : null}
                     </td>

@@ -1,0 +1,3 @@
+install.sh text eol=lf
+installer/i18n.sh text eol=lf
+installer/locales/*.lang text eol=lf

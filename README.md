@@ -43,7 +43,7 @@ It started as GonoPBX, was called VST for a few days, and is now VstPBX. The cod
 - **SIP debug**: live SIP message viewer grouped by call, with the raw message
 - **Security**: IP allow-list for SIP registration, password-strength checks, audit log of every administrative action, Fail2Ban status, JWT login with admin and user roles
 - **Home Assistant**: API key, click-to-call and MQTT events (`gonopbx/...` topics, see [Compatibility](#compatibility-notes))
-- **German and English interface**, chosen at install time; dark mode
+- **English, Italian and German interface**, with a language selector and dark mode
 - **One-click update** from the web interface, or `./install.sh` again on the command line
 
 ## Screenshots
@@ -135,6 +135,7 @@ vstpbx/
 ├── asterisk/            Dockerfile, sound prompts, music on hold, config templates
 ├── backend/             FastAPI application, config generators, AMI client
 ├── frontend/            React application (Vite, Tailwind)
+├── installer/           Installer translations (installer/locales/*.lang)
 ├── docs/                Installation guides and screenshots
 ├── releases/            Release notes per version
 ├── docker-compose.yml
@@ -145,6 +146,69 @@ vstpbx/
 ## Contributing
 
 Bug reports and ideas are welcome as [issues](https://github.com/ankaios76/vstpbx/issues). Pull requests too; please describe what you changed and how you tested it.
+
+### Adding a web UI language
+
+The web UI uses one JSON catalog per language in `frontend/src/locales/`.
+To add a language, for example French:
+
+1. Copy `frontend/src/locales/en.json` to `frontend/src/locales/fr.json`.
+   The lowercase filename (`fr`) is the language code used by the app and
+   appears in its language selector.
+2. Update the catalog's `meta` values:
+   - `name`: the language's display name, such as `Français`.
+   - `locale`: a BCP 47 locale used to format dates and times, such as `fr-FR`.
+   - `direction`: `ltr` or `rtl`.
+   - `title` and `description`: localized page metadata.
+   - `adminManualUrl` is optional. Add it only if a manual PDF is published
+     for this language; otherwise the manual link uses the English PDF.
+3. Translate every value under `messages`. Keep every message key unchanged
+   and preserve all `{placeholders}` exactly, including their spelling and
+   capitalization. Keys are referenced by the frontend code; changing them
+   makes the translation unavailable. The app falls back to English for
+   missing values, but those fallbacks are not a complete translation, so
+   compare the new catalog's keys with `en.json`.
+4. Build and start the frontend so Vite includes the new catalog:
+
+   ```bash
+   docker compose build frontend
+   docker compose up -d frontend
+   ```
+
+5. Select the new language in the UI and review the pages, forms, dialogs and
+   longer messages for untranslated text, incorrect wording and layout issues.
+   Run the frontend build as a check; it verifies the application compiles, but
+   does not verify translation completeness.
+
+The English catalog is the source for message keys. Frontend pages should use
+the catalog-based `t('message.key')` helper rather than adding language-specific
+text directly to components.
+
+### Adding an installer language
+
+Installer prompts use a separate format from the web UI. To translate them,
+copy `installer/locales/en.lang` to
+`installer/locales/<language-code>.lang` and translate its values while keeping
+the keys and `%s` placeholders unchanged. Set `yes_values` and `no_values` to
+the accepted affirmative and negative responses. The installer uses English
+for its prompts until this file is present. Adding only a web UI JSON catalog
+does not translate the installer.
+
+### Translating the administrator manual
+
+The administrator handbook is also maintained separately, as Markdown sources
+in `docs/`, with generated PDFs served by the frontend. A new web UI catalog
+does not create a translated manual. To publish one, add and translate a
+Markdown source, update `tools/build_admin_manuals.py` to generate its PDF,
+and set `adminManualUrl` in the catalog.
+
+The administrator handbook PDFs are generated from the English, Italian and
+German Markdown sources in `docs/`. Build and run the generator with:
+
+```bash
+docker build -f tools/admin-manual.Dockerfile -t vstpbx-admin-manual .
+docker run --rm -v "$PWD:/workspace" -w /workspace vstpbx-admin-manual
+```
 
 ## License
 

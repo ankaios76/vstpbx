@@ -54,6 +54,18 @@ SIP_PORT = os.getenv("SIP_PORT", "5060")
 DEFAULT_CODECS = "ulaw,alaw,g722,opus"
 
 
+def get_asterisk_language() -> str:
+    language = os.getenv("ASTERISK_LANG", "en").strip().lower().replace("_", "-")
+    if not language or "/" in language or "\\" in language or not all(
+        char.isascii() and (char.isalnum() or char == "-") for char in language
+    ):
+        return "en"
+    return language.split("-", 1)[0]
+
+
+ASTERISK_LANGUAGE = get_asterisk_language()
+
+
 def generate_pjsip_config(peers: List[SIPPeer], global_codecs: str = DEFAULT_CODECS, acl_enabled: bool = False) -> str:
     """Generate complete pjsip.conf content"""
 
@@ -89,7 +101,7 @@ bind=0.0.0.0:5060
 [endpoint-basic](!)
 type=endpoint
 context=internal
-language=de
+language={ASTERISK_LANGUAGE}
 disallow=all
 {allow_lines}
 direct_media=no
@@ -195,7 +207,7 @@ type=endpoint
 outbound_auth=trunk-auth-{tid}
 aors=trunk-aor-{tid}
 context={trunk.context}
-language=de
+language={ASTERISK_LANGUAGE}
 from_domain={from_domain}{from_user_line}
 disallow=all
 allow={trunk.codecs}
@@ -222,7 +234,7 @@ qualify_frequency=60
 type=endpoint
 aors=trunk-aor-{tid}
 context={trunk.context}
-language=de
+language={ASTERISK_LANGUAGE}
 from_domain={from_domain}{from_user_line}
 disallow=all
 allow={trunk.codecs}

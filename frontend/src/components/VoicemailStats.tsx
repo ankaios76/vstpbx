@@ -10,7 +10,7 @@ interface VoicemailStats {
 }
 
 const VoicemailStats: React.FC = () => {
-  const { tr } = useI18n();
+  const { t } = useI18n();
   const [stats, setStats] = useState<VoicemailStats | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -25,7 +25,7 @@ const VoicemailStats: React.FC = () => {
       const response = await axios.get('/api/voicemail/stats');
       setStats(response.data);
     } catch (error) {
-      console.error('Error fetching voicemail stats:', error);
+      console.error(t('voicemailPage.error.fetchStats'), error);
     } finally {
       setLoading(false);
     }
@@ -35,7 +35,7 @@ const VoicemailStats: React.FC = () => {
     return (
       <div className="voicemail-stats-card">
         <div className="card-header">
-          <h3>{tr('Voicemail', 'Voicemail')}</h3>
+          <h3>{t('voicemailPage.title')}</h3>
         </div>
         <div className="card-content loading">
           <div className="spinner-small"></div>
@@ -48,10 +48,10 @@ const VoicemailStats: React.FC = () => {
     return (
       <div className="voicemail-stats-card">
         <div className="card-header">
-          <h3>{tr('Voicemail', 'Voicemail')}</h3>
+          <h3>{t('voicemailPage.title')}</h3>
         </div>
         <div className="card-content error">
-          <p>{tr('Keine Daten verfügbar', 'No data available')}</p>
+          <p>{t('voicemailStats.noData')}</p>
         </div>
       </div>
     );
@@ -64,7 +64,7 @@ const VoicemailStats: React.FC = () => {
   return (
     <div className="voicemail-stats-card">
       <div className="card-header">
-        <h3>{tr('Voicemail', 'Voicemail')}</h3>
+        <h3>{t('voicemailPage.title')}</h3>
       </div>
       
       <div className="card-content">
@@ -73,7 +73,7 @@ const VoicemailStats: React.FC = () => {
             <div className="stat-icon">📭</div>
             <div className="stat-details">
               <div className="stat-value">{stats.total}</div>
-              <div className="stat-label">{tr('Gesamt', 'Total')}</div>
+              <div className="stat-label">{t('voicemailPage.total')}</div>
             </div>
           </div>
 
@@ -81,21 +81,21 @@ const VoicemailStats: React.FC = () => {
             <div className="stat-icon">🔔</div>
             <div className="stat-details">
               <div className="stat-value">{stats.unread}</div>
-              <div className="stat-label">{tr('Ungelesen', 'Unread')}</div>
+              <div className="stat-label">{t('voicemailPage.unread')}</div>
             </div>
           </div>
         </div>
 
         {topMailboxes.length > 0 && (
           <div className="mailboxes-section">
-            <h4 className="section-title">{tr('Top Mailboxen', 'Top mailboxes')}</h4>
+            <h4 className="section-title">{t('voicemailStats.topMailboxes')}</h4>
             <div className="mailbox-bars">
               {topMailboxes.map(([mailbox, count]) => {
                 const percentage = (count / stats.total) * 100;
                 return (
                   <div key={mailbox} className="mailbox-bar">
                     <div className="mailbox-bar-header">
-                      <span className="mailbox-label">{tr('Box', 'Box')} {mailbox}</span>
+                      <span className="mailbox-label">{t('voicemailStats.mailboxLabel', { mailbox })}</span>
                       <span className="mailbox-count">{count}</span>
                     </div>
                     <div className="progress-bar">
@@ -118,7 +118,7 @@ const VoicemailStats: React.FC = () => {
               <line x1="12" y1="8" x2="12" y2="12" />
               <line x1="12" y1="16" x2="12.01" y2="16" />
             </svg>
-            <span>{stats.unread} {tr('ungelesene Nachrichten', 'unread messages')}</span>
+            <span>{t('voicemailStats.unreadCount', { count: stats.unread })}</span>
           </div>
         )}
       </div>

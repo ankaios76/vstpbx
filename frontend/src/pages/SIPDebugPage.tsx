@@ -24,7 +24,7 @@ interface SIPMessageData {
 }
 
 export default function SIPDebugPage() {
-  const { tr, lang } = useI18n()
+  const { t, locale } = useI18n()
   const [enabled, setEnabled] = useState(false)
   const [messageCount, setMessageCount] = useState(0)
   const [callCount, setCallCount] = useState(0)
@@ -43,7 +43,7 @@ export default function SIPDebugPage() {
       setMessageCount(data.message_count)
       setCallCount(data.call_count)
     } catch (e) {
-      console.error(tr('SIP-Debug-Status konnte nicht geladen werden', 'Failed to fetch SIP debug status'), e)
+      console.error(t('sipDebug.failed.to.fetch.sip.debug.status'), e)
     }
   }
 
@@ -52,7 +52,7 @@ export default function SIPDebugPage() {
       const data = await api.getSipDebugCalls()
       setCalls(data)
     } catch (e) {
-      console.error(tr('SIP-Debug-Anrufe konnten nicht geladen werden', 'Failed to fetch SIP debug calls'), e)
+      console.error(t('sipDebug.failed.to.fetch.sip.debug.calls'), e)
     }
   }
 
@@ -61,7 +61,7 @@ export default function SIPDebugPage() {
       const data = await api.getSipDebugMessages(callId)
       setMessages(data)
     } catch (e) {
-      console.error(tr('SIP-Debug-Nachrichten konnten nicht geladen werden', 'Failed to fetch SIP debug messages'), e)
+      console.error(t('sipDebug.failed.to.fetch.sip.debug.messages'), e)
     }
   }
 
@@ -75,7 +75,7 @@ export default function SIPDebugPage() {
       }
       await fetchStatus()
     } catch (e) {
-      console.error(tr('SIP-Debug konnte nicht umgeschaltet werden', 'Failed to toggle SIP debug'), e)
+      console.error(t('sipDebug.failed.to.toggle.sip.debug'), e)
     } finally {
       setToggling(false)
     }
@@ -136,12 +136,12 @@ export default function SIPDebugPage() {
 
   const formatTime = (iso: string) => {
     const d = new Date(iso + 'Z')
-    return d.toLocaleTimeString(lang === 'en' ? 'en-US' : 'de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+    return d.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit', second: '2-digit' })
   }
 
   const formatDateTime = (iso: string) => {
     const d = new Date(iso + 'Z')
-    return d.toLocaleString(lang === 'en' ? 'en-US' : 'de-DE', {
+    return d.toLocaleString(locale, {
       day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit'
     })
   }
@@ -164,12 +164,12 @@ export default function SIPDebugPage() {
       <div className="bg-surface rounded-card shadow-sm p-4">
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-4">
-            <h1 className="text-xl font-semibold text-content">SIP Debug</h1>
+            <h1 className="text-xl font-semibold text-content">{t('sipDebug.title')}</h1>
             <button
               onClick={toggleCapture}
               disabled={toggling}
               className="flex items-center gap-2 transition-colors"
-              title={enabled ? tr('Capture deaktivieren', 'Disable capture') : tr('Capture aktivieren', 'Enable capture')}
+              title={enabled ? t('sipDebug.disable.capture') : t('sipDebug.enable.capture')}
             >
               {enabled ? (
                 <ToggleRight className="w-8 h-8 text-success" />
@@ -177,22 +177,22 @@ export default function SIPDebugPage() {
                 <ToggleLeft className="w-8 h-8 text-muted" />
               )}
               <span className={`text-sm font-medium ${enabled ? 'text-success' : 'text-muted'}`}>
-                {toggling ? '...' : enabled ? tr('Aktiv', 'Active') : tr('Inaktiv', 'Inactive')}
+                {toggling ? '...' : enabled ? t('settings.active') : t('sipDebug.inactive')}
               </span>
             </button>
           </div>
 
           <div className="flex items-center gap-4">
             <div className="text-sm text-muted">
-              <span className="font-medium text-content">{messageCount}</span> {tr('Nachrichten', 'messages')}
+              <span className="font-medium text-content">{messageCount}</span> {t('sipDebug.messages')}
               {' / '}
-              <span className="font-medium text-content">{callCount}</span> {tr('Calls', 'calls')}
+              <span className="font-medium text-content">{callCount}</span> {t('sipDebug.calls')}
             </div>
             <button
               onClick={refresh}
               disabled={loading}
               className="p-2 rounded-input text-muted hover:bg-surface-hover transition-colors"
-              title={tr('Aktualisieren', 'Refresh')}
+              title={t('settings.refresh')}
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             </button>
@@ -200,7 +200,7 @@ export default function SIPDebugPage() {
         </div>
         {enabled && (
           <p className="text-xs text-muted mt-2">
-            {tr('Auto-Refresh alle 10 Sekunden. Nachrichten werden max. 2 Stunden gespeichert.', 'Auto-refresh every 10 seconds. Messages are kept for up to 2 hours.')}
+            {t('sipDebug.auto.refresh.every.10.seconds.messages.are.kept.for.up.to.2.hours')}
           </p>
         )}
       </div>
@@ -209,8 +209,8 @@ export default function SIPDebugPage() {
       {calls.length === 0 ? (
         <div className="bg-surface rounded-card shadow-sm p-8 text-center text-muted">
           {enabled
-            ? tr('Noch keine SIP-Nachrichten erfasst. Starten Sie einen Anruf.', 'No SIP messages captured yet. Start a call.')
-            : tr('Capture ist deaktiviert. Aktivieren Sie den Toggle oben.', 'Capture is disabled. Enable the toggle above.')}
+            ? t('sipDebug.no.sip.messages.captured.yet.start.a.call')
+            : t('sipDebug.capture.is.disabled.enable.the.toggle.above')}
         </div>
       ) : (
         <div className="bg-surface rounded-card shadow-sm overflow-hidden">
@@ -219,12 +219,12 @@ export default function SIPDebugPage() {
               <thead>
                 <tr className="bg-surface-subtle/50 text-left">
                   <th className="px-4 py-3 font-medium text-content w-8"></th>
-                  <th className="px-4 py-3 font-medium text-content">{tr('Zeit', 'Time')}</th>
-                  <th className="px-4 py-3 font-medium text-content">{tr('Call-ID', 'Call ID')}</th>
-                  <th className="px-4 py-3 font-medium text-content">{tr('Von', 'From')}</th>
-                  <th className="px-4 py-3 font-medium text-content">{tr('Nach', 'To')}</th>
-                  <th className="px-4 py-3 font-medium text-content">{tr('Methode', 'Method')}</th>
-                  <th className="px-4 py-3 font-medium text-content text-right">Msgs</th>
+                  <th className="px-4 py-3 font-medium text-content">{t('sipDebug.time')}</th>
+                  <th className="px-4 py-3 font-medium text-content">{t('sipDebug.call.id')}</th>
+                  <th className="px-4 py-3 font-medium text-content">{t('sipDebug.from')}</th>
+                  <th className="px-4 py-3 font-medium text-content">{t('sipDebug.to')}</th>
+                  <th className="px-4 py-3 font-medium text-content">{t('sipDebug.method')}</th>
+                  <th className="px-4 py-3 font-medium text-content text-right">{t('sipDebug.messagesShort')}</th>
                 </tr>
               </thead>
               <tbody>

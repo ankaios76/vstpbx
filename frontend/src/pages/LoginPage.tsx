@@ -6,7 +6,7 @@ import { useI18n } from '../context/I18nContext'
 export default function LoginPage() {
   const demoHint = (import.meta.env.VITE_DEMO_HINT as string | undefined) || ''
   const { login } = useAuth()
-  const { tr } = useI18n()
+  const { t } = useI18n()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -20,7 +20,7 @@ export default function LoginPage() {
     try {
       await login(username, password)
     } catch (err: any) {
-      setError(err.message || tr('Login fehlgeschlagen', 'Login failed'))
+      setError(err.message || t('login.error'))
     } finally {
       setLoading(false)
     }
@@ -30,15 +30,12 @@ export default function LoginPage() {
     <div className="min-h-screen bg-surface-subtle flex items-center justify-center px-4">
       <div className="max-w-md w-full">
         <div className="bg-surface rounded-card border border-subtle p-8">
-          {/* Logo mit Subline — hier ist Platz dafuer, und die
-              Anmeldeseite ist die Stelle, an der die Anwendung sich
-              vorstellt. 44 px Hoehe laut LOGO.md. */}
           <div className="flex justify-center mb-8">
-            <Logo withClaim className="h-11 w-auto max-w-full" />
+            <Logo className="h-11 w-auto max-w-full" />
           </div>
 
           <h2 className="font-headline text-center text-2xl font-bold text-content mb-6">
-            {tr('Anmeldung', 'Sign in')}
+            {t('login.signIn')}
           </h2>
 
           {error && (
@@ -50,7 +47,7 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label htmlFor="username" className="block text-sm font-medium text-content mb-1">
-                {tr('Benutzername', 'Username')}
+                {t('settings.username')}
               </label>
               <input
                 id="username"
@@ -60,13 +57,13 @@ export default function LoginPage() {
                 required
                 autoFocus
                 className="w-full px-4 py-2.5 border border-subtle rounded-input focus:ring-2 focus:ring-link focus:border-link outline-none transition-colors bg-surface text-content"
-                placeholder={tr('Benutzername eingeben', 'Enter username')}
+                placeholder={t('login.usernamePlaceholder')}
               />
             </div>
 
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-content mb-1">
-                {tr('Passwort', 'Password')}
+                {t('settings.password')}
               </label>
               <input
                 id="password"
@@ -75,7 +72,7 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 className="w-full px-4 py-2.5 border border-subtle rounded-input focus:ring-2 focus:ring-link focus:border-link outline-none transition-colors bg-surface text-content"
-                placeholder={tr('Passwort eingeben', 'Enter password')}
+                placeholder={t('login.passwordPlaceholder')}
               />
             </div>
 
@@ -84,7 +81,7 @@ export default function LoginPage() {
               disabled={loading}
               className="w-full bg-brand hover:bg-brand-hover disabled:opacity-50 text-on-primary font-medium py-2.5 px-4 rounded-input transition-colors"
             >
-              {loading ? tr('Anmeldung...', 'Signing in...') : tr('Anmelden', 'Sign in')}
+              {loading ? t('login.signingIn') : t('login.signIn')}
             </button>
           </form>
         </div>
@@ -96,7 +93,7 @@ export default function LoginPage() {
         )}
 
         <p className="text-center text-muted text-xs mt-6">
-          {tr('Telefonanlage auf Basis von Asterisk', 'PBX based on Asterisk')}
+          {t('login.tagline')}
         </p>
       </div>
     </div>

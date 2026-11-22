@@ -76,25 +76,25 @@ interface VoicemailMessage {
 type DetailTab = 'numbers' | 'forwarding' | 'voicemail' | 'audio' | 'features'
 
 export default function ExtensionDetailPage({ extension, onBack }: Props) {
-  const { tr, lang } = useI18n()
+  const { t, locale } = useI18n()
   const FORWARD_TYPE_LABELS: Record<string, string> = {
-    unconditional: tr('Sofort (immer)', 'Always'),
-    busy: tr('Bei Besetzt', 'When busy'),
-    no_answer: tr('Bei Nichtmelden', 'No answer'),
+    unconditional: t('extensionDetail.forwardType.always'),
+    busy: t('extensionDetail.forwardType.whenBusy'),
+    no_answer: t('extensionDetail.forwardType.noAnswer'),
   }
 
   const FORWARD_TYPE_DESCRIPTIONS: Record<string, string> = {
-    unconditional: tr('Alle Anrufe werden sofort weitergeleitet, das Telefon klingelt nicht.', 'All calls are forwarded immediately; the phone does not ring.'),
-    busy: tr('Weiterleitung nur wenn die Leitung besetzt ist.', 'Forward only when the line is busy.'),
-    no_answer: tr('Weiterleitung wenn nach einer bestimmten Zeit nicht abgenommen wird.', 'Forward if not answered after a set time.'),
+    unconditional: t('extensionDetail.forwardType.alwaysDescription'),
+    busy: t('extensionDetail.forwardType.whenBusyDescription'),
+    no_answer: t('extensionDetail.forwardType.noAnswerDescription'),
   }
 
   const detailTabs: { id: DetailTab; label: string; icon: typeof Phone }[] = [
-    { id: 'numbers', label: tr('Rufnummern', 'Numbers'), icon: Phone },
-    { id: 'forwarding', label: tr('Rufumleitung', 'Call forwarding'), icon: PhoneForwarded },
-    { id: 'voicemail', label: tr('Voicemail', 'Voicemail'), icon: Voicemail },
-    { id: 'audio', label: tr('Audio-Codecs', 'Audio codecs'), icon: Volume2 },
-    { id: 'features', label: tr('Funktionen', 'Features'), icon: ToggleRight },
+    { id: 'numbers', label: t('extensionDetail.tab.numbers'), icon: Phone },
+    { id: 'forwarding', label: t('extensionDetail.tab.forwarding'), icon: PhoneForwarded },
+    { id: 'voicemail', label: t('extensionDetail.tab.voicemail'), icon: Voicemail },
+    { id: 'audio', label: t('extensionDetail.tab.audio'), icon: Volume2 },
+    { id: 'features', label: t('extensionDetail.tab.features'), icon: ToggleRight },
   ]
   const [activeTab, setActiveTab] = useState<DetailTab>('numbers')
   const [peer, setPeer] = useState<SIPPeer | null>(null)
@@ -222,7 +222,7 @@ export default function ExtensionDetailPage({ extension, onBack }: Props) {
         setVoicemails([])
       }
     } catch (error) {
-      console.error(tr('Fehler beim Laden der Daten:', 'Error fetching data:'), error)
+      console.error(t('extensionDetail.error.fetchData'), error)
     } finally {
       setLoading(false)
     }
@@ -243,22 +243,22 @@ export default function ExtensionDetailPage({ extension, onBack }: Props) {
       setShowRouteForm(false)
       fetchData()
     } catch (error: any) {
-      alert(error.message || tr('Fehler beim Zuordnen', 'Error while assigning'))
+      alert(error.message || t('extensionDetail.error.assignNumber'))
     }
   }
 
   const handleDeleteRoute = async (route: InboundRoute) => {
-    if (!confirm(tr(`Rufnummer ${route.did} wirklich entfernen?`, `Really remove number ${route.did}?`))) return
+    if (!confirm(t('extensionDetail.confirm.removeNumber', { number: route.did }))) return
     try {
       await api.deleteRoute(route.id)
       fetchData()
     } catch (error: any) {
-      alert(error.message || tr('Fehler beim Löschen', 'Error while deleting'))
+      alert(error.message || t('extensionDetail.error.delete'))
     }
   }
 
   const getTrunkName = (trunkId: number) => {
-    return trunks.find(t => t.id === trunkId)?.name || `Trunk #${trunkId}`
+    return trunks.find(t => t.id === trunkId)?.name || t('extensionDetail.trunkFallback', { id: trunkId })
   }
 
   // ==================== CALL FORWARDS ====================
@@ -276,7 +276,7 @@ export default function ExtensionDetailPage({ extension, onBack }: Props) {
       setShowForwardForm(false)
       fetchData()
     } catch (error: any) {
-      alert(error.message || tr('Fehler beim Erstellen der Rufumleitung', 'Error creating call forward'))
+      alert(error.message || t('extensionDetail.error.createForward'))
     }
   }
 
@@ -289,7 +289,7 @@ export default function ExtensionDetailPage({ extension, onBack }: Props) {
       await api.updateCallForwardingSettings({ forward_clip_no_screening: enabled })
     } catch (e: any) {
       setClipNoScreening(previous)
-      setClipError(e?.message || 'Einstellung konnte nicht gespeichert werden.')
+      setClipError(e?.message || t('extensionDetail.error.saveForwardSettings'))
     } finally {
       setClipSaving(false)
     }
@@ -300,17 +300,17 @@ export default function ExtensionDetailPage({ extension, onBack }: Props) {
       await api.updateCallForward(fwd.id, { enabled: !fwd.enabled })
       fetchData()
     } catch (error: any) {
-      alert(error.message || tr('Fehler beim Ändern', 'Error while updating'))
+      alert(error.message || t('extensionDetail.error.update'))
     }
   }
 
   const handleDeleteForward = async (fwd: CallForwardRule) => {
-    if (!confirm(tr(`Rufumleitung "${FORWARD_TYPE_LABELS[fwd.forward_type]}" wirklich löschen?`, `Really delete "${FORWARD_TYPE_LABELS[fwd.forward_type]}"?`))) return
+    if (!confirm(t('extensionDetail.confirm.deleteForward', { type: FORWARD_TYPE_LABELS[fwd.forward_type] }))) return
     try {
       await api.deleteCallForward(fwd.id)
       fetchData()
     } catch (error: any) {
-      alert(error.message || tr('Fehler beim Löschen', 'Error while deleting'))
+      alert(error.message || t('extensionDetail.error.delete'))
     }
   }
 
@@ -328,7 +328,7 @@ export default function ExtensionDetailPage({ extension, onBack }: Props) {
       const mbData = await api.getVoicemailMailbox(extension)
       setMailbox(mbData)
     } catch (error: any) {
-      alert(error.message || tr('Fehler beim Speichern der Voicemail-Konfiguration', 'Error saving voicemail settings'))
+      alert(error.message || t('extensionDetail.error.saveVoicemail'))
     } finally {
       setSavingMailbox(false)
     }
@@ -354,7 +354,7 @@ export default function ExtensionDetailPage({ extension, onBack }: Props) {
   }
 
   const handleDeleteVoicemail = async (vm: VoicemailMessage) => {
-    if (!confirm(tr('Voicemail wirklich löschen?', 'Really delete voicemail?'))) return
+    if (!confirm(t('extensionDetail.confirm.deleteVoicemail')))
     try {
       await api.deleteVoicemail(vm.id)
       if (playingId === vm.id) {
@@ -363,7 +363,7 @@ export default function ExtensionDetailPage({ extension, onBack }: Props) {
       }
       setVoicemails(prev => prev.filter(v => v.id !== vm.id))
     } catch (error: any) {
-      alert(error.message || tr('Fehler beim Löschen', 'Error while deleting'))
+      alert(error.message || t('extensionDetail.error.delete'))
     }
   }
 
@@ -380,10 +380,14 @@ export default function ExtensionDetailPage({ extension, onBack }: Props) {
     const diffMins = Math.floor(diffMs / 60000)
     const diffHours = Math.floor(diffMs / 3600000)
     const diffDays = Math.floor(diffMs / 86400000)
-    if (diffMins < 60) return tr(`vor ${diffMins} Min.`, `${diffMins} min ago`)
-    if (diffHours < 24) return tr(`vor ${diffHours} Std.`, `${diffHours} h ago`)
-    if (diffDays < 7) return tr(`vor ${diffDays} Tag${diffDays > 1 ? 'en' : ''}`, `${diffDays} day${diffDays > 1 ? 's' : ''} ago`)
-    return date.toLocaleDateString(lang === 'en' ? 'en-US' : 'de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+    if (diffMins < 60) {
+      return t(diffMins === 1 ? 'extensionDetail.time.minuteAgo' : 'extensionDetail.time.minutesAgo', { count: diffMins })
+    }
+    if (diffHours < 24) return t('extensionDetail.time.hoursAgo', { count: diffHours })
+    if (diffDays < 7) {
+      return t(diffDays === 1 ? 'extensionDetail.time.dayAgo' : 'extensionDetail.time.daysAgo', { count: diffDays })
+    }
+    return date.toLocaleDateString(locale, { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
   }
 
   // ==================== OUTBOUND CID / PAI ====================
@@ -401,7 +405,7 @@ export default function ExtensionDetailPage({ extension, onBack }: Props) {
       fetchData()
       setTimeout(() => setOutboundSaved(false), 5000)
     } catch (error: any) {
-      alert(error.message || tr('Fehler beim Speichern der ausgehenden Rufnummer', 'Error saving outbound caller ID'))
+      alert(error.message || t('extensionDetail.error.saveOutboundCallerId'))
     } finally {
       setSavingOutbound(false)
     }
@@ -422,7 +426,7 @@ export default function ExtensionDetailPage({ extension, onBack }: Props) {
         pickup_group: pickupGroup || null,
       })
     } catch (err) {
-      console.error(tr('BLF-Update fehlgeschlagen', 'BLF update failed'), err)
+      console.error(t('extensionDetail.error.updateBlf'), err)
     } finally {
       setSavingBlf(false)
     }
@@ -443,7 +447,7 @@ export default function ExtensionDetailPage({ extension, onBack }: Props) {
         pickup_group: pickupGroup || null,
       })
     } catch (err) {
-      console.error(tr('Pickup-Gruppe-Update fehlgeschlagen', 'Pickup group update failed'), err)
+      console.error(t('extensionDetail.error.updatePickupGroup'), err)
     } finally {
       setSavingPickup(false)
     }
@@ -478,7 +482,7 @@ export default function ExtensionDetailPage({ extension, onBack }: Props) {
   const handleSaveCodecs = async () => {
     if (!peer) return
     if (!useGlobalCodecs && peerCodecs.length === 0) {
-      alert(tr('Mindestens ein Codec muss ausgewählt sein', 'Select at least one codec'))
+      alert(t('extensionDetail.error.codecRequired'))
       return
     }
     setSavingCodecs(true)
@@ -486,7 +490,7 @@ export default function ExtensionDetailPage({ extension, onBack }: Props) {
       await api.updatePeerCodecs(peer.id, useGlobalCodecs ? null : peerCodecs.join(','))
       fetchData()
     } catch (error: any) {
-      alert(error.message || tr('Fehler beim Speichern der Codec-Einstellungen', 'Error saving codec settings'))
+      alert(error.message || t('extensionDetail.error.saveCodecs'))
     } finally {
       setSavingCodecs(false)
     }
@@ -523,7 +527,7 @@ export default function ExtensionDetailPage({ extension, onBack }: Props) {
           <h1 className="text-3xl font-bold text-content">
             {peer?.caller_id || extension}
           </h1>
-          <p className="text-muted">{tr('Nebenstelle', 'Extension')} {extension}</p>
+          <p className="text-muted">{t('extensionDetail.extension')} {extension}</p>
         </div>
       </div>
 
@@ -536,7 +540,7 @@ export default function ExtensionDetailPage({ extension, onBack }: Props) {
             </div>
             <div className="flex-1 space-y-3">
               <div>
-                <div className="text-sm text-link font-medium mb-1">{tr('Ausgehende Rufnummer', 'Outbound caller ID')}</div>
+                <div className="text-sm text-link font-medium mb-1">{t('extensionDetail.outboundCallerId')}</div>
                 <select
                   value={outboundCid || routes[0].did}
                   onChange={(e) => handleOutboundCidChange(e.target.value)}
@@ -544,27 +548,27 @@ export default function ExtensionDetailPage({ extension, onBack }: Props) {
                 >
                   {routes.map((route, index) => (
                     <option key={route.id} value={route.did}>
-                      {route.did}{index === 0 && !peer?.outbound_cid ? ` (${tr('Standard', 'Default')})` : ''}{route.description ? ` — ${route.description}` : ''}
+                      {route.did}{index === 0 && !peer?.outbound_cid ? ` (${t('extensionDetail.default')})` : ''}{route.description ? ` — ${route.description}` : ''}
                     </option>
                   ))}
                 </select>
                 <div className="text-xs text-link mt-1">
-                  {tr('Wird bei ausgehenden Anrufen als Caller-ID gesendet (via', 'Used as outbound caller ID (via')}{' '}
-                  {getTrunkName((routes.find(r => r.did === (outboundCid || routes[0].did)) || routes[0]).trunk_id)}
-                  {')'}
+                  {t('extensionDetail.outboundCallerIdSentVia', {
+                    trunk: getTrunkName((routes.find(r => r.did === (outboundCid || routes[0].did)) || routes[0]).trunk_id),
+                  })}
                 </div>
               </div>
               <div>
-                <div className="text-sm text-link font-medium mb-1">{tr('P-Asserted-Identity (PAI)', 'P-Asserted-Identity (PAI)')}</div>
+                <div className="text-sm text-link font-medium mb-1">{t('extensionDetail.paiHeading')}</div>
                 <input
                   type="text"
                   value={pai}
                   onChange={(e) => handlePaiChange(e.target.value)}
-                  placeholder={tr('z.B. +49221123456 (optional)', 'e.g. +49221123456 (optional)')}
+                  placeholder={t('extensionDetail.examplePai')}
                   className="w-full max-w-xs px-3 py-2 border border-subtle border-subtle rounded-input bg-surface text-content text-sm focus:ring-2 focus:ring-link"
                 />
                 <div className="text-xs text-link mt-1">
-                  {tr('Optionaler PAI-Header, z.B. die Kopfnummer des Nummernblocks', 'Optional PAI header, e.g. the main number of a number block')}
+                  {t('extensionDetail.paiDescription')}
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -578,35 +582,35 @@ export default function ExtensionDetailPage({ extension, onBack }: Props) {
                   }`}
                 >
                   <Save className="w-4 h-4" />
-                  {savingOutbound ? tr('Speichere...', 'Saving...') : tr('Speichern', 'Save')}
+                  {savingOutbound ? t('extensionDetail.saving') : t('extensionDetail.save')}
                 </button>
                 {outboundSaved && (
                   <span className="flex items-center gap-1.5 text-success text-sm font-medium animate-fade-in">
                     <CheckCircle className="w-4 h-4" />
-                    {tr('Gespeichert & Dialplan aktualisiert', 'Saved & dialplan updated')}
+                    {t('extensionDetail.outboundSaved')}
                   </span>
                 )}
                 {outboundDirty && !outboundSaved && (
-                  <span className="text-warning text-warning text-xs">{tr('Ungespeicherte Änderungen', 'Unsaved changes')}</span>
+                  <span className="text-warning text-warning text-xs">{t('extensionDetail.unsavedChanges')}</span>
                 )}
               </div>
 
               {/* Aktive Konfiguration */}
               {!outboundDirty && !outboundSaved && (peer?.outbound_cid || peer?.pai) && (
                 <div className="bg-surface border border-subtle border-subtle rounded-input px-4 py-3 mt-1">
-                  <div className="text-xs font-semibold text-link uppercase tracking-wide mb-2">{tr('Aktive Konfiguration', 'Active configuration')}</div>
+                  <div className="text-xs font-semibold text-link uppercase tracking-wide mb-2">{t('extensionDetail.activeConfiguration')}</div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
                     <div>
-                      <span className="text-muted">{tr('Caller-ID', 'Caller ID')}: </span>
+                      <span className="text-muted">{t('extensionDetail.callerId')}: </span>
                       <span className="font-mono font-medium text-content">{peer?.outbound_cid || routes[0].did}</span>
-                      {!peer?.outbound_cid && <span className="text-muted text-xs ml-1">({tr('Standard', 'Default')})</span>}
+                      {!peer?.outbound_cid && <span className="text-muted text-xs ml-1">({t('extensionDetail.default')})</span>}
                     </div>
                     <div>
                       <span className="text-muted">PAI: </span>
                       {peer?.pai ? (
                         <span className="font-mono font-medium text-content">{peer.pai}</span>
                       ) : (
-                        <span className="text-muted">{tr('nicht gesetzt', 'not set')}</span>
+                        <span className="text-muted">{t('extensionDetail.notSet')}</span>
                       )}
                     </div>
                   </div>
@@ -619,7 +623,7 @@ export default function ExtensionDetailPage({ extension, onBack }: Props) {
 
       {/* Tab Navigation */}
       <div className="border-b border-subtle mb-6">
-        <nav className="flex flex-wrap gap-1" aria-label="Tabs">
+        <nav className="flex flex-wrap gap-1" aria-label={t('extensionDetail.tabs')}>
           {detailTabs.map(tab => {
             const Icon = tab.icon
             const isActive = activeTab === tab.id
@@ -660,14 +664,14 @@ export default function ExtensionDetailPage({ extension, onBack }: Props) {
       {activeTab === 'numbers' && (
         <div className="bg-surface rounded-input shadow">
           <div className="px-6 py-4 border-b border-subtle flex justify-between items-center">
-            <h2 className="text-lg font-semibold text-content">{tr('Zugeordnete Rufnummern', 'Assigned numbers')}</h2>
+            <h2 className="text-lg font-semibold text-content">{t('extensionDetail.assignedNumbers')}</h2>
             {!showRouteForm && trunks.length > 0 && (
               <button
                 onClick={() => setShowRouteForm(true)}
                 className="flex items-center gap-2 bg-brand text-on-primary px-4 py-2 rounded-input hover:bg-brand-hover transition text-sm"
               >
                 <Plus className="w-4 h-4" />
-                {tr('Rufnummer zuordnen', 'Assign number')}
+                {t('extensionDetail.assignNumber')}
               </button>
             )}
           </div>
@@ -680,7 +684,7 @@ export default function ExtensionDetailPage({ extension, onBack }: Props) {
               <form onSubmit={handleAddRoute} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-content mb-1">{tr('Leitung *', 'Trunk *')}</label>
+                    <label className="block text-sm font-medium text-content mb-1">{t('extensionDetail.trunkRequired')}</label>
                     <select
                       value={routeFormData.trunk_id}
                       onChange={(e) => setRouteFormData({ ...routeFormData, trunk_id: Number(e.target.value) })}
@@ -693,23 +697,23 @@ export default function ExtensionDetailPage({ extension, onBack }: Props) {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-content mb-1">{tr('Rufnummer (DID) *', 'Number (DID) *')}</label>
+                    <label className="block text-sm font-medium text-content mb-1">{t('extensionDetail.numberRequired')}</label>
                     <input
                       type="text"
                       value={routeFormData.did}
                       onChange={(e) => setRouteFormData({ ...routeFormData, did: e.target.value })}
-                      placeholder={tr('z.B. +49221123456', 'e.g. +49221123456')}
+                      placeholder={t('extensionDetail.exampleNumber')}
                       className="w-full px-3 py-2 border border-subtle rounded-input focus:ring-2 focus:ring-link bg-surface text-content"
                       required
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-content mb-1">{tr('Beschreibung', 'Description')}</label>
+                    <label className="block text-sm font-medium text-content mb-1">{t('extensionDetail.description')}</label>
                     <input
                       type="text"
                       value={routeFormData.description}
                       onChange={(e) => setRouteFormData({ ...routeFormData, description: e.target.value })}
-                      placeholder={tr('z.B. Hauptnummer', 'e.g. main number')}
+                      placeholder={t('extensionDetail.exampleMainNumber')}
                       className="w-full px-3 py-2 border border-subtle rounded-input focus:ring-2 focus:ring-link bg-surface text-content"
                     />
                   </div>
@@ -718,18 +722,18 @@ export default function ExtensionDetailPage({ extension, onBack }: Props) {
                 {selectedTrunk && (
                   <div className="bg-surface border border-subtle rounded-input p-4">
                     <div className="text-sm font-medium text-content mb-2">
-                      {tr('Nummernblock von', 'Number block for')} "{selectedTrunk.name}"
+                      {t('extensionDetail.numberBlockFor')} "{selectedTrunk.name}"
                     </div>
                     {selectedTrunk.number_block ? (
                       <div className="text-sm text-muted font-mono bg-surface-subtle px-3 py-1.5 rounded inline-block">
                         {selectedTrunk.number_block}
                       </div>
                     ) : (
-                      <div className="text-sm text-muted italic">{tr('Kein Nummernblock hinterlegt', 'No number block set')}</div>
+                      <div className="text-sm text-muted italic">{t('extensionDetail.noNumberBlock')}</div>
                     )}
                     {assignedDids.length > 0 && (
                       <div className="mt-3">
-                        <div className="text-xs text-muted mb-1">{tr('Bereits vergebene Nummern dieser Leitung:', 'Numbers already assigned on this trunk:')}</div>
+                        <div className="text-xs text-muted mb-1">{t('extensionDetail.assignedNumbersOnTrunk')}</div>
                         <div className="flex flex-wrap gap-2">
                           {assignedDids.map(r => (
                             <span key={r.id} className="text-xs bg-surface-subtle text-warning border border-yellow-600 px-2 py-1 rounded font-mono">
@@ -744,7 +748,7 @@ export default function ExtensionDetailPage({ extension, onBack }: Props) {
 
                 <div className="flex gap-3">
                   <button type="submit" className="px-4 py-2 bg-brand text-on-primary rounded-input hover:bg-brand-hover text-sm">
-                    {tr('Zuordnen', 'Assign')}
+                    {t('extensionDetail.assign')}
                   </button>
                   <button
                     type="button"
@@ -754,7 +758,7 @@ export default function ExtensionDetailPage({ extension, onBack }: Props) {
                     }}
                     className="px-4 py-2 bg-surface-subtle text-content rounded-input hover:bg-surface-hover text-sm"
                   >
-                    {tr('Abbrechen', 'Cancel')}
+                    {t('extensionDetail.cancel')}
                   </button>
                 </div>
               </form>
@@ -771,9 +775,9 @@ export default function ExtensionDetailPage({ extension, onBack }: Props) {
                     <div>
                       <div className="font-medium text-content flex items-center gap-2">
                         {route.did}
-                        <span className="text-xs bg-surface-subtle text-success px-1.5 py-0.5 rounded">{tr('Eingehend', 'Inbound')}</span>
+                        <span className="text-xs bg-surface-subtle text-success px-1.5 py-0.5 rounded">{t('extensionDetail.inbound')}</span>
                         {(outboundCid ? route.did === outboundCid : index === 0) && (
-                          <span className="text-xs bg-surface-accent text-link px-1.5 py-0.5 rounded">{tr('Ausgehend', 'Outbound')}</span>
+                          <span className="text-xs bg-surface-accent text-link px-1.5 py-0.5 rounded">{t('extensionDetail.outbound')}</span>
                         )}
                       </div>
                       <div className="text-sm text-muted flex items-center gap-2">
@@ -796,8 +800,8 @@ export default function ExtensionDetailPage({ extension, onBack }: Props) {
             ) : (
               <div className="px-6 py-8 text-center text-muted">
                 {trunks.length > 0
-                  ? tr('Keine Rufnummern zugeordnet. Klicken Sie auf "Rufnummer zuordnen" um eine Nummer zuzuweisen.', 'No numbers assigned. Click "Assign number" to add one.')
-                  : tr('Bitte zuerst eine Leitung unter dem Menüpunkt "Leitungen" anlegen.', 'Please create a trunk first under "Trunks".')}
+                  ? t('extensionDetail.noAssignedNumbers')
+                  : t('extensionDetail.createTrunkFirst')}
               </div>
             )}
           </div>
@@ -808,17 +812,17 @@ export default function ExtensionDetailPage({ extension, onBack }: Props) {
       {activeTab === 'features' && (
         <div className="bg-surface rounded-input shadow">
           <div className="px-6 py-4 border-b border-subtle">
-            <h2 className="text-lg font-semibold text-content">{tr('Funktionen', 'Features')}</h2>
-            <p className="text-sm text-muted">{tr('Zusätzliche Nebenstellen‑Funktionen wie BLF und Pickup.', 'Additional extension features like BLF and pickup.')}</p>
+            <h2 className="text-lg font-semibold text-content">{t('extensionDetail.tab.features')}</h2>
+            <p className="text-sm text-muted">{t('extensionDetail.featuresDescription')}</p>
           </div>
 
           {/* BLF */}
           <div className="px-6 py-4 border-b border-subtle bg-surface-subtle/40">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
               <div>
-                <div className="text-sm font-medium text-content">BLF (Busy Lamp Field)</div>
+                <div className="text-sm font-medium text-content">{t('extensionDetail.blfLabel')}</div>
                 <div className="text-xs text-muted">
-                  {tr('Veröffentlicht den Status dieser Nebenstelle für BLF‑Tasten und Präsenz.', 'Publishes this extension status for BLF keys and presence.')}
+                  {t('extensionDetail.blfDescription')}
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -832,7 +836,7 @@ export default function ExtensionDetailPage({ extension, onBack }: Props) {
                   }`}
                 >
                   {blfEnabled ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
-                  {blfEnabled ? tr('Aktiv', 'Active') : tr('Inaktiv', 'Inactive')}
+                  {blfEnabled ? t('extensionDetail.active') : t('extensionDetail.inactive')}
                 </button>
                 <button
                   type="button"
@@ -841,7 +845,7 @@ export default function ExtensionDetailPage({ extension, onBack }: Props) {
                   className="inline-flex items-center gap-2 px-4 py-2 bg-brand text-on-primary rounded-input hover:bg-brand-hover text-sm disabled:opacity-60"
                 >
                   <Save className="w-4 h-4" />
-                  {savingBlf ? tr('Speichert…', 'Saving…') : tr('Speichern', 'Save')}
+                  {savingBlf ? t('extensionDetail.saving') : t('extensionDetail.save')}
                 </button>
               </div>
             </div>
@@ -851,9 +855,9 @@ export default function ExtensionDetailPage({ extension, onBack }: Props) {
           <div className="px-6 py-4 border-b border-subtle bg-surface-subtle/40">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
               <div>
-                <div className="text-sm font-medium text-content">{tr('Pickup‑Gruppe', 'Pickup group')}</div>
+                <div className="text-sm font-medium text-content">{t('extensionDetail.pickupGroup')}</div>
                 <div className="text-xs text-muted">
-                  {tr('Nebenstellen mit gleicher Gruppe können Anrufe mit `*8` abholen. Mehrere Gruppen mit Komma trennen.', 'Extensions in the same group can pick up calls with `*8`. Separate multiple groups with commas.')}
+                  {t('extensionDetail.pickupGroupDescription')}
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -861,7 +865,7 @@ export default function ExtensionDetailPage({ extension, onBack }: Props) {
                   type="text"
                   value={pickupGroup}
                   onChange={(e) => setPickupGroup(e.target.value)}
-                  placeholder={tr('z.B. 1 oder 1,2', 'e.g. 1 or 1,2')}
+                  placeholder={t('extensionDetail.examplePickupGroups')}
                   className="w-40 px-3 py-2 border border-subtle rounded-input bg-surface text-content text-sm"
                 />
                 <button
@@ -871,7 +875,7 @@ export default function ExtensionDetailPage({ extension, onBack }: Props) {
                   className="inline-flex items-center gap-2 px-4 py-2 bg-brand text-on-primary rounded-input hover:bg-brand-hover text-sm disabled:opacity-60"
                 >
                   <Save className="w-4 h-4" />
-                  {savingPickup ? tr('Speichert…', 'Saving…') : tr('Speichern', 'Save')}
+                  {savingPickup ? t('extensionDetail.saving') : t('extensionDetail.save')}
                 </button>
               </div>
             </div>
@@ -883,7 +887,7 @@ export default function ExtensionDetailPage({ extension, onBack }: Props) {
       {activeTab === 'forwarding' && (
         <div className="bg-surface rounded-input shadow">
           <div className="px-6 py-4 border-b border-subtle flex justify-between items-center">
-            <h2 className="text-lg font-semibold text-content">{tr('Rufumleitungen', 'Call forwarding')}</h2>
+            <h2 className="text-lg font-semibold text-content">{t('extensionDetail.callForwarding')}</h2>
             {!showForwardForm && availableForwardTypes.length > 0 && (
               <button
                 onClick={() => {
@@ -893,7 +897,7 @@ export default function ExtensionDetailPage({ extension, onBack }: Props) {
                 className="flex items-center gap-2 bg-brand text-on-primary px-4 py-2 rounded-input hover:bg-brand-hover transition text-sm"
               >
                 <Plus className="w-4 h-4" />
-                {tr('Umleitung hinzufügen', 'Add forwarding')}
+                {t('extensionDetail.addForwarding')}
               </button>
             )}
           </div>
@@ -909,17 +913,14 @@ export default function ExtensionDetailPage({ extension, onBack }: Props) {
               />
               <span className="text-sm">
                 <span className="font-medium text-content">
-                  Rufnummer des Anrufers mitgeben
+                  {t('extensionDetail.clipForwardedCalls')}
                 </span>
                 <span className="block text-muted mt-0.5">
-                  Beim weitergeleiteten Anruf sieht das Ziel die Nummer des ursprünglichen
-                  Anrufers statt der eigenen. Muss beim Provider als „CLIP no screening“
-                  freigeschaltet sein — sonst weist er weitergeleitete Anrufe ab und es
-                  kommt gar kein Anruf mehr durch. Gilt für alle Nebenstellen.
+                  {t('extensionDetail.clipForwardedCallsDescription')}
                 </span>
                 {clipSaving && (
                   <span className="block text-muted mt-1">
-                    Dialplan wird neu geschrieben…
+                    {t('extensionDetail.rewritingDialplan')}
                   </span>
                 )}
                 {clipError && (
@@ -934,7 +935,7 @@ export default function ExtensionDetailPage({ extension, onBack }: Props) {
               <form onSubmit={handleAddForward} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-content mb-1">{tr('Typ *', 'Type *')}</label>
+                    <label className="block text-sm font-medium text-content mb-1">{t('extensionDetail.typeRequired')}</label>
                     <select
                       value={forwardFormData.forward_type}
                       onChange={(e) => setForwardFormData({ ...forwardFormData, forward_type: e.target.value })}
@@ -950,19 +951,19 @@ export default function ExtensionDetailPage({ extension, onBack }: Props) {
                     </p>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-content mb-1">{tr('Zielrufnummer *', 'Destination number *')}</label>
+                    <label className="block text-sm font-medium text-content mb-1">{t('extensionDetail.destinationNumberRequired')}</label>
                     <input
                       type="text"
                       value={forwardFormData.destination}
                       onChange={(e) => setForwardFormData({ ...forwardFormData, destination: e.target.value })}
-                      placeholder={tr('z.B. +491701234567', 'e.g. +491701234567')}
+                      placeholder={t('extensionDetail.exampleDestinationNumber')}
                       className="w-full px-3 py-2 border border-subtle rounded-input focus:ring-2 focus:ring-link bg-surface text-content"
                       required
                     />
                   </div>
                   {forwardFormData.forward_type === 'no_answer' && (
                     <div>
-                      <label className="block text-sm font-medium text-content mb-1">{tr('Klingelzeit (Sek.)', 'Ring time (sec)')}</label>
+                      <label className="block text-sm font-medium text-content mb-1">{t('extensionDetail.ringTimeSeconds')}</label>
                       <input
                         type="number"
                         value={forwardFormData.ring_time}
@@ -972,14 +973,14 @@ export default function ExtensionDetailPage({ extension, onBack }: Props) {
                         className="w-full px-3 py-2 border border-subtle rounded-input focus:ring-2 focus:ring-link bg-surface text-content"
                       />
                       <p className="text-xs text-muted mt-1">
-                        {tr('Wie lange soll das Telefon klingeln bevor umgeleitet wird?', 'How long should the phone ring before forwarding?')}
+                        {t('extensionDetail.ringTimeDescription')}
                       </p>
                     </div>
                   )}
                 </div>
                 <div className="flex gap-3">
                   <button type="submit" className="px-4 py-2 bg-brand text-on-primary rounded-input hover:bg-brand-hover text-sm">
-                    {tr('Umleitung erstellen', 'Create forwarding')}
+                    {t('extensionDetail.createForwarding')}
                   </button>
                   <button
                     type="button"
@@ -989,7 +990,7 @@ export default function ExtensionDetailPage({ extension, onBack }: Props) {
                     }}
                     className="px-4 py-2 bg-surface-subtle text-content rounded-input hover:bg-surface-hover text-sm"
                   >
-                    {tr('Abbrechen', 'Cancel')}
+                    {t('extensionDetail.cancel')}
                   </button>
                 </div>
               </form>
@@ -1006,13 +1007,13 @@ export default function ExtensionDetailPage({ extension, onBack }: Props) {
                       <div className="font-medium text-content flex items-center gap-2">
                         {FORWARD_TYPE_LABELS[fwd.forward_type]}
                         {!fwd.enabled && (
-                          <span className="text-xs bg-surface-subtle text-muted px-2 py-0.5 rounded">{tr('Deaktiviert', 'Disabled')}</span>
+                          <span className="text-xs bg-surface-subtle text-muted px-2 py-0.5 rounded">{t('extensionDetail.disabled')}</span>
                         )}
                       </div>
                       <div className="text-sm text-muted">
-                        {tr('Ziel', 'Target')}: {fwd.destination}
+                        {t('extensionDetail.target')}: {fwd.destination}
                         {fwd.forward_type === 'no_answer' && (
-                          <span className="ml-2 text-muted">({fwd.ring_time}s {tr('Klingelzeit', 'ring time')})</span>
+                          <span className="ml-2 text-muted">({fwd.ring_time}s {t('extensionDetail.ringTime')})</span>
                         )}
                       </div>
                     </div>
@@ -1021,7 +1022,7 @@ export default function ExtensionDetailPage({ extension, onBack }: Props) {
                     <button
                       onClick={() => handleToggleForward(fwd)}
                       className={`p-2 rounded-input transition ${fwd.enabled ? 'text-success hover:bg-surface-hover' : 'text-muted hover:bg-surface-hover'}`}
-                      title={fwd.enabled ? tr('Deaktivieren', 'Disable') : tr('Aktivieren', 'Enable')}
+                      title={fwd.enabled ? t('extensionDetail.disable') : t('extensionDetail.enable')}
                     >
                       {fwd.enabled ? <ToggleRight className="w-6 h-6" /> : <ToggleLeft className="w-6 h-6" />}
                     </button>
@@ -1036,7 +1037,7 @@ export default function ExtensionDetailPage({ extension, onBack }: Props) {
               ))
             ) : (
               <div className="px-6 py-8 text-center text-muted">
-                {tr('Keine Rufumleitungen konfiguriert. Klicken Sie auf "Umleitung hinzufügen" um eine Weiterleitung einzurichten.', 'No forwarding configured. Click "Add forwarding" to create one.')}
+                {t('extensionDetail.noForwarding')}
               </div>
             )}
           </div>
@@ -1049,11 +1050,11 @@ export default function ExtensionDetailPage({ extension, onBack }: Props) {
           {/* Voicemail Config */}
           <div className="bg-surface rounded-input shadow">
             <div className="px-6 py-4 border-b border-subtle flex justify-between items-center">
-              <h2 className="text-lg font-semibold text-content">{tr('Voicemail-Einstellungen', 'Voicemail settings')}</h2>
+              <h2 className="text-lg font-semibold text-content">{t('extensionDetail.voicemailSettings')}</h2>
               <button
                 onClick={() => setMailboxForm(f => ({ ...f, enabled: !f.enabled }))}
                 className={`p-2 rounded-input transition ${mailboxForm.enabled ? 'text-success hover:bg-surface-hover' : 'text-muted hover:bg-surface-hover'}`}
-                title={mailboxForm.enabled ? tr('Deaktivieren', 'Disable') : tr('Aktivieren', 'Enable')}
+                title={mailboxForm.enabled ? t('extensionDetail.disable') : t('extensionDetail.enable')}
               >
                 {mailboxForm.enabled ? <ToggleRight className="w-6 h-6" /> : <ToggleLeft className="w-6 h-6" />}
               </button>
@@ -1062,7 +1063,7 @@ export default function ExtensionDetailPage({ extension, onBack }: Props) {
             <div className="px-6 py-4">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
                 <div>
-                  <label className="block text-sm font-medium text-content mb-1">{tr('PIN', 'PIN')}</label>
+                  <label className="block text-sm font-medium text-content mb-1">{t('extensionDetail.pin')}</label>
                   <input
                     type="text"
                     value={mailboxForm.pin}
@@ -1072,7 +1073,7 @@ export default function ExtensionDetailPage({ extension, onBack }: Props) {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-content mb-1">{tr('Name', 'Name')}</label>
+                  <label className="block text-sm font-medium text-content mb-1">{t('extensionDetail.name')}</label>
                   <input
                     type="text"
                     value={mailboxForm.name}
@@ -1082,7 +1083,7 @@ export default function ExtensionDetailPage({ extension, onBack }: Props) {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-content mb-1">{tr('E-Mail (optional)', 'Email (optional)')}</label>
+                  <label className="block text-sm font-medium text-content mb-1">{t('extensionDetail.emailOptional')}</label>
                   <input
                     type="email"
                     value={mailboxForm.email}
@@ -1092,7 +1093,7 @@ export default function ExtensionDetailPage({ extension, onBack }: Props) {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-content mb-1">{tr('Klingeldauer (Sek.)', 'Ring duration (sec)')}</label>
+                  <label className="block text-sm font-medium text-content mb-1">{t('extensionDetail.ringDurationSeconds')}</label>
                   <input
                     type="number"
                     value={mailboxForm.ring_timeout}
@@ -1101,7 +1102,7 @@ export default function ExtensionDetailPage({ extension, onBack }: Props) {
                     max={120}
                     className="w-full px-3 py-2 border border-subtle rounded-input focus:ring-2 focus:ring-link bg-surface text-content"
                   />
-                  <p className="text-xs text-muted mt-1">{tr('Wie lange klingelt es bevor Voicemail annimmt?', 'How long should it ring before voicemail answers?')}</p>
+                  <p className="text-xs text-muted mt-1">{t('extensionDetail.ringDurationDescription')}</p>
                 </div>
               </div>
               <button
@@ -1110,7 +1111,7 @@ export default function ExtensionDetailPage({ extension, onBack }: Props) {
                 className="flex items-center gap-2 bg-brand text-on-primary px-4 py-2 rounded-input hover:bg-brand-hover transition text-sm disabled:opacity-50"
               >
                 <Save className="w-4 h-4" />
-                {savingMailbox ? tr('Speichere...', 'Saving...') : tr('Speichern', 'Save')}
+                {savingMailbox ? t('extensionDetail.saving') : t('extensionDetail.save')}
               </button>
             </div>
           </div>
@@ -1120,10 +1121,10 @@ export default function ExtensionDetailPage({ extension, onBack }: Props) {
             <div className="bg-surface rounded-input shadow">
               <div className="px-6 py-4 border-b border-subtle">
                 <div className="flex items-center gap-2">
-                  <h2 className="text-lg font-semibold text-content">{tr('Nachrichten', 'Messages')}</h2>
+                  <h2 className="text-lg font-semibold text-content">{t('extensionDetail.messages')}</h2>
                   {unreadVoicemails > 0 && (
                     <span className="bg-ink-100 text-content text-xs px-2 py-0.5 rounded-full">
-                      {unreadVoicemails} {tr('neu', 'new')}
+                      {t('extensionDetail.unreadMessages', { count: unreadVoicemails })}
                     </span>
                   )}
                 </div>
@@ -1147,9 +1148,9 @@ export default function ExtensionDetailPage({ extension, onBack }: Props) {
                         </button>
                         <div className="min-w-0">
                           <div className="font-medium text-content flex items-center gap-2">
-                            <span className="truncate">{vm.caller_id || tr('Unbekannt', 'Unknown')}</span>
+                            <span className="truncate">{vm.caller_id || t('extensionDetail.unknown')}</span>
                             {!vm.is_read && (
-                              <span className="text-xs bg-surface-accent text-content px-1.5 py-0.5 rounded-input flex-shrink-0">{tr('Neu', 'New')}</span>
+                              <span className="text-xs bg-surface-accent text-content px-1.5 py-0.5 rounded-input flex-shrink-0">{t('extensionDetail.new')}</span>
                             )}
                           </div>
                           <div className="text-sm text-muted flex items-center gap-3">
@@ -1171,7 +1172,7 @@ export default function ExtensionDetailPage({ extension, onBack }: Props) {
                   ))
                 ) : (
                   <div className="px-6 py-8 text-center text-muted">
-                    {tr('Keine Voicemail-Nachrichten vorhanden.', 'No voicemail messages.')}
+                    {t('extensionDetail.noVoicemailMessages')}
                   </div>
                 )}
               </div>
@@ -1184,7 +1185,7 @@ export default function ExtensionDetailPage({ extension, onBack }: Props) {
       {activeTab === 'audio' && (
         <div className="bg-surface rounded-input shadow">
           <div className="px-6 py-4 border-b border-subtle">
-            <h2 className="text-lg font-semibold text-content">{tr('Audio-Codecs', 'Audio codecs')}</h2>
+            <h2 className="text-lg font-semibold text-content">{t('extensionDetail.tab.audio')}</h2>
           </div>
 
           <div className="px-6 py-4">
@@ -1196,9 +1197,9 @@ export default function ExtensionDetailPage({ extension, onBack }: Props) {
                 className="w-4 h-4 text-link border-subtle rounded focus:ring-link"
               />
               <div>
-                <span className="text-sm font-medium text-content">{tr('Globale Einstellungen verwenden', 'Use global settings')}</span>
+                <span className="text-sm font-medium text-content">{t('extensionDetail.useGlobalCodecs')}</span>
                 <span className="block text-xs text-muted">
-                  {tr('Aktuelle globale Codecs', 'Current global codecs')}: {globalCodecs.join(', ') || tr('keine', 'none')}
+                  {t('extensionDetail.currentGlobalCodecs')}: {globalCodecs.join(', ') || t('extensionDetail.none')}
                 </span>
               </div>
             </label>
@@ -1235,7 +1236,7 @@ export default function ExtensionDetailPage({ extension, onBack }: Props) {
               className="flex items-center gap-2 bg-brand text-on-primary px-4 py-2 rounded-input hover:bg-brand-hover transition text-sm disabled:opacity-50"
             >
               <Save className="w-4 h-4" />
-              {savingCodecs ? tr('Speichere...', 'Saving...') : tr('Codecs speichern', 'Save codecs')}
+              {savingCodecs ? t('extensionDetail.saving') : t('extensionDetail.saveCodecs')}
             </button>
           </div>
         </div>

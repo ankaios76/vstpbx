@@ -1,6 +1,9 @@
 services:
   asterisk:
-    build: ./asterisk
+    build:
+      context: ./asterisk
+      args:
+        - ASTERISK_LANG=${ASTERISK_LANG:-en}
     container_name: pbx_asterisk
     restart: unless-stopped
     # Host-Networking: Asterisk bindet direkt die LAN-IP des Hosts, damit LAN-Gegenstellen
@@ -34,6 +37,7 @@ services:
     env_file: .env
     environment:
       - DATABASE_URL=postgresql://asterisk:${DB_PASSWORD}@postgres:5432/asterisk_gui
+      - ASTERISK_LANG=${ASTERISK_LANG:-en}
       # Asterisk laeuft im Host-Netz -> AMI ueber das Host-Gateway erreichen (siehe extra_hosts).
       - ASTERISK_HOST=${ASTERISK_HOST:-host.docker.internal}
       - ASTERISK_PORT=5038
@@ -68,7 +72,7 @@ services:
     build:
       context: ./frontend
       args:
-        - VITE_UI_LANG=${UI_LANG:-de}
+        - VITE_UI_LANG=${UI_LANG:-en}
         - VITE_DEMO_HINT=${DEMO_HINT:-}
     container_name: pbx_frontend
     restart: unless-stopped

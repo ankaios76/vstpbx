@@ -22,7 +22,7 @@ interface VoicemailStats {
 }
 
 const VoicemailPage = () => {
-  const { tr, lang } = useI18n();
+  const { t, locale } = useI18n();
   const [voicemails, setVoicemails] = useState<Voicemail[]>([]);
   const [stats, setStats] = useState<VoicemailStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -60,7 +60,7 @@ const VoicemailPage = () => {
       const data = Array.isArray(response.data) ? response.data : [];
       setVoicemails(data);
     } catch (error) {
-      console.error(tr('Fehler beim Laden der Voicemails:', 'Error fetching voicemails:'), error);
+      console.error(t('voicemailPage.error.fetchVoicemails'), error);
       setVoicemails([]);
     } finally {
       setLoading(false);
@@ -72,7 +72,7 @@ const VoicemailPage = () => {
       const response = await axios.get('/api/voicemail/stats');
       setStats(response.data);
     } catch (error) {
-      console.error(tr('Fehler beim Laden der Statistiken:', 'Error fetching stats:'), error);
+      console.error(t('voicemailPage.error.fetchStats'), error);
     }
   };
 
@@ -82,12 +82,12 @@ const VoicemailPage = () => {
       fetchVoicemails();
       fetchStats();
     } catch (error) {
-      console.error(tr('Fehler beim Markieren als gelesen:', 'Error marking as read:'), error);
+      console.error(t('voicemailPage.error.markRead'), error);
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (!window.confirm(tr('Voicemail wirklich löschen?', 'Really delete voicemail?'))) return;
+    if (!window.confirm(t('voicemailPage.confirmDelete'))) return;
 
     try {
       await axios.delete(`/api/voicemail/${id}`);
@@ -97,7 +97,7 @@ const VoicemailPage = () => {
       }
       fetchStats();
     } catch (error) {
-      console.error(tr('Fehler beim Löschen der Voicemail:', 'Error deleting voicemail:'), error);
+      console.error(t('voicemailPage.error.deleteVoicemail'), error);
     }
   };
 
@@ -116,13 +116,13 @@ const VoicemailPage = () => {
     const diffDays = Math.floor(diffMs / 86400000);
 
     if (diffMins < 60) {
-      return tr(`vor ${diffMins} Min.`, `${diffMins} min ago`);
+      return t('voicemailPage.time.minutesAgo', { count: diffMins });
     } else if (diffHours < 24) {
-      return tr(`vor ${diffHours} Std.`, `${diffHours} h ago`);
+      return t('voicemailPage.time.hoursAgo', { count: diffHours });
     } else if (diffDays < 7) {
-      return tr(`vor ${diffDays} Tag${diffDays > 1 ? 'en' : ''}`, `${diffDays} day${diffDays > 1 ? 's' : ''} ago`);
+      return diffDays === 1 ? t('voicemailPage.time.oneDayAgo') : t('voicemailPage.time.daysAgo', { count: diffDays });
     } else {
-      return date.toLocaleDateString(lang === 'en' ? 'en-US' : 'de-DE', {
+      return date.toLocaleDateString(locale, {
         day: '2-digit',
         month: '2-digit',
         year: 'numeric',
@@ -137,16 +137,16 @@ const VoicemailPage = () => {
   return (
     <div className="voicemail-page">
       <div className="page-header">
-        <h1>{tr('Voicemail', 'Voicemail')}</h1>
+        <h1>{t('voicemailPage.title')}</h1>
         <div className="stats-summary">
           {stats && (
             <>
               <div className="stat-badge">
-                <span className="stat-label">{tr('Gesamt', 'Total')}:</span>
+                <span className="stat-label">{t('voicemailPage.total')}:</span>
                 <span className="stat-value">{stats.total}</span>
               </div>
               <div className="stat-badge unread">
-                <span className="stat-label">{tr('Ungelesen', 'Unread')}:</span>
+                <span className="stat-label">{t('voicemailPage.unread')}:</span>
                 <span className="stat-value">{stats.unread}</span>
               </div>
             </>
@@ -157,7 +157,7 @@ const VoicemailPage = () => {
       <div className="voicemail-container">
         <div className="voicemail-sidebar">
           <div className="filter-section">
-            <h3>{tr('Mailboxen', 'Mailboxes')}</h3>
+            <h3>{t('voicemailPage.mailboxes')}</h3>
             <div className="mailbox-list">
               {mailboxes.map(mailbox => (
                 <button
@@ -166,7 +166,7 @@ const VoicemailPage = () => {
                   onClick={() => setSelectedMailbox(mailbox)}
                 >
                   <span className="mailbox-name">
-                    {mailbox === 'all' ? tr('Alle Mailboxen', 'All mailboxes') : tr(`Mailbox ${mailbox}`, `Mailbox ${mailbox}`)}
+                    {mailbox === 'all' ? t('voicemailPage.allMailboxes') : t('voicemailPage.mailbox', { mailbox })}
                   </span>
                   {mailbox !== 'all' && stats?.by_mailbox[mailbox] && (
                     <span className="mailbox-count">{stats.by_mailbox[mailbox]}</span>
@@ -183,7 +183,7 @@ const VoicemailPage = () => {
                 checked={showUnreadOnly}
                 onChange={(e) => setShowUnreadOnly(e.target.checked)}
               />
-              <span>{tr('Nur ungelesene anzeigen', 'Show unread only')}</span>
+              <span>{t('voicemailPage.showUnreadOnly')}</span>
             </label>
           </div>
         </div>
@@ -195,16 +195,16 @@ const VoicemailPage = () => {
           {loading ? (
             <div className="loading-state">
               <div className="spinner"></div>
-              <p>{tr('Lade Voicemails...', 'Loading voicemails...')}</p>
+              <p>{t('voicemailPage.loading')}</p>
             </div>
           ) : voicemails.length === 0 ? (
             <div className="empty-state">
               <div className="empty-icon">📭</div>
-              <h3>{tr('Keine Voicemails', 'No voicemails')}</h3>
+              <h3>{t('voicemailPage.noVoicemails')}</h3>
               <p>
                 {showUnreadOnly 
-                  ? tr('Keine ungelesenen Voicemails vorhanden.', 'No unread voicemails.')
-                  : tr('Es sind keine Voicemails vorhanden.', 'There are no voicemails.')}
+                  ? t('voicemailPage.noUnreadVoicemails')
+                  : t('voicemailPage.empty')}
               </p>
             </div>
           ) : (
@@ -222,9 +222,9 @@ const VoicemailPage = () => {
                 >
                   <div className="voicemail-header">
                     <div className="voicemail-info">
-                      {!vm.is_read && <span className="unread-badge">{tr('Neu', 'New')}</span>}
-                      <span className="caller-id">{vm.caller_id || tr('Unbekannt', 'Unknown')}</span>
-                      <span className="mailbox-badge">Box {vm.mailbox}</span>
+                      {!vm.is_read && <span className="unread-badge">{t('extensionDetail.new')}</span>}
+                      <span className="caller-id">{vm.caller_id || t('extensionDetail.unknown')}</span>
+                      <span className="mailbox-badge">{t('voicemailPage.mailboxLabel', { mailbox: vm.mailbox })}</span>
                     </div>
                     <div className="voicemail-meta">
                       <span className="date">{formatDate(vm.date)}</span>
